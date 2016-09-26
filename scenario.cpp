@@ -176,7 +176,7 @@ void Scenario::moveCamera(const QPoint& c, const QPoint& p) {
     auto tmp = previous - current;
 
     GMlib::Vector<float,2> d (tmp(0),-tmp(1) );
-    d = d * 0.0001;
+    d = d * 0.02;
     _camera->move(d);
 }
 // Makes a point for camera movement

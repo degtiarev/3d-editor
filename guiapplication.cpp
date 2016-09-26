@@ -123,21 +123,29 @@ void GuiApplication::handleMouseButtonPressedEvents(QMouseEvent *m) {
         qDebug() << "Left Mouse Button Pressed";
 
         _leftMousePressed = true;
-        _startpos = { m->pos().x(), m->pos().y() };
+
+        _startpos = _endpos;
+        _endpos.setX(m->pos().x());
+        _endpos.setY(m->pos().y());
+
     }
 }
 
 void GuiApplication::handleMouseMovementEvents(QMouseEvent *m) {
+
     if( _leftMousePressed == true) {
-        _endpos = { m->pos().x(), m->pos().y() };
-qDebug()<< m->pos().x()<<" "<<m->pos().y();
+
+        _startpos = _endpos;
+        _endpos.setX(m->pos().x());
+        _endpos.setY(m->pos().y());
+
         _scenario.moveCamera(_startpos, _endpos);
     }
 }
 
 void GuiApplication::handleMouseButtonReleasedEvents(QMouseEvent *m) {
     if( m->type() == QEvent::MouseButtonRelease && m->button()==Qt::LeftButton ) {
-         qDebug() << "Left Mouse Button Unpressed";
+        qDebug() << "Left Mouse Button Unpressed";
         _leftMousePressed = false;
     }
 }
