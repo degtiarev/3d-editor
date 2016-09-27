@@ -36,7 +36,7 @@ private:
 private slots:
 
     void handleGLInputEvents();
-    void handleKeyPress(QKeyEvent *e);
+    void handleKeyPress(QKeyEvent *);
 
 
     virtual void                                onSceneGraphInitialized();
@@ -49,6 +49,7 @@ private slots:
     void  handleMouseButtonPressedEvents(QMouseEvent*);
     void  handleMouseMovementEvents(QMouseEvent*);
     void  handleMouseButtonReleasedEvents(QMouseEvent*);
+    void  handleMouseWheel(QWheelEvent*);
     // **************************************************************
 
 
