@@ -19,6 +19,7 @@ class DefaultSelectRenderer;
 class RenderTarget;
 class SceneObject;
 
+template <typename T> class PTorus;
 template <typename T, int n> class Point;
 // **************************************************************
 }
@@ -75,6 +76,9 @@ public:
     void                                              deselectObj(GMlib::SceneObject *selected_obj);
     void                                              selectAll();
 
+
+    void         save();
+
     GMlib::Point<int, 2> fromQtToGMlibViewPoint(const GMlib::Camera& cam, const QPoint& pos);
 
     void moveCamera(const QPoint& p, const QPoint& c);
@@ -99,8 +103,14 @@ private:
     std::shared_ptr<TestTorus>                        _testtorus;
 
 
+
 private:
     static std::unique_ptr<Scenario>                  _instance;
+
+    void         save( std::ofstream& os, const GMlib::SceneObject* obj);
+    void         saveSO( std::ofstream& os, const GMlib::SceneObject* obj);
+    void         savePT( std::ofstream& os, const GMlib::PTorus<float>* obj);
+
 public:
     static Scenario&                                  instance();
 };

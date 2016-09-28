@@ -87,8 +87,10 @@ void GuiApplication::handleGLInputEvents()
 
         if(me and me->buttons()== Qt::LeftButton){
             //qDebug() << "Handle Mouse button";
+
             if (_scenario.findSceneObj(_endpos)){
                 _scenario.getObj(_scenario.findSceneObj(_endpos));}
+
             qDebug()<<_endpos;
         }
 
@@ -102,14 +104,17 @@ void GuiApplication::handleGLInputEvents()
 
 void GuiApplication::handleKeyPress(QKeyEvent *e)
 {
+
+    qDebug()<<e->text();
+
     if (e->key()==Qt::Key_Q) {_window.close(); }
     if (e->key()==Qt::Key_P) { _input_events.push(std::make_shared<QKeyEvent>(*e)); }
     if(e->key()==Qt::Key_R){_scenario.toggleSimulation();}
 
-    if(e->key()==Qt::Key_W){_scenario.rotateVCamera();}
-    if(e->key()==Qt::Key_S){_scenario.rotateHCamera();}
-    if(e->key()==Qt::Key_A){_scenario.rotateVCamera_L();}
-    if(e->key()==Qt::Key_D){_scenario.rotateHCamera_L();}
+    if(e->key()==Qt::Key_Up){_scenario.rotateVCamera();}
+    if(e->key()==Qt::Key_Down){_scenario.rotateHCamera();}
+    if(e->key()==Qt::Key_Left){_scenario.rotateVCamera_L();}
+    if(e->key()==Qt::Key_Right){_scenario.rotateHCamera_L();}
 
     if(e->key()==Qt::Key_1){_scenario.switchCam(1);}
     if(e->key()==Qt::Key_2){_scenario.switchCam(2);}
@@ -117,6 +122,8 @@ void GuiApplication::handleKeyPress(QKeyEvent *e)
     if(e->key()==Qt::Key_4){_scenario.switchCam(4);}
 
     if(e->key()==Qt::Key_A){_scenario.selectAll();}
+
+    if(e->key() == Qt::Key_S) {_scenario.save();}
 }
 
 
@@ -163,8 +170,10 @@ void GuiApplication::handleMouseButtonReleasedEvents(QMouseEvent *m) {
 void GuiApplication::handleMouseWheel(QWheelEvent *w){
     int delta = w->delta();
 
-    if (delta<0){_scenario.zoomCameraW(1.05);}
-    if (delta>0) {_scenario.zoomCameraW(0.95);}
+    if (!w->modifiers()){
+        if (delta<0){_scenario.zoomCameraW(1.05);}
+        if (delta>0) {_scenario.zoomCameraW(0.95);}
+    }
 
     if (w->modifiers()==Qt::ShiftModifier){ _scenario.panVertical(delta);}
     if (w->modifiers()==Qt::ControlModifier){_scenario.panHorizontal(delta);}

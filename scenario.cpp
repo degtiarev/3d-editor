@@ -12,6 +12,8 @@
 
 // stl
 #include <cassert>
+#include <iostream>
+#include <iomanip>
 
 Scenario::Scenario() : QObject(), _timer_id{0}/*, _select_renderer{nullptr}*/ {
 
@@ -108,6 +110,12 @@ Scenario::initializeScenario() {
     _scene->insert(_testtorus.get());
 
     _testtorus->test01();
+
+    auto cylinder=new GMlib::PCylinder<float>(1);
+    cylinder->toggleDefaultVisualizer();
+    cylinder->replot(200,200,1,1);
+    _scene->insert(cylinder);
+
 }
 
 std::unique_ptr<Scenario> Scenario::_instance {nullptr};
@@ -372,19 +380,178 @@ void Scenario::switchCam(int n)
 
 void Scenario::selectAll()
 {
-//    for (int i=0; i<=_camera->getViewportH(); i+=100){
-//        for (int j=0; j<=_camera->getViewportW(); j+=100 ){
 
-//            qDebug()<< i<<" "<<j;
 
-//           QPoint point{i,j};
-//           GMlib::SceneObject* obj = findSceneObj(point);
-//          // this->getObj(obj);
+    //    QPoint point{30,40};
 
-//        }
-//    }
+    //    if (fin dSceneObj(point)){
+    //        qDebug()<<"True";
+
+
+    //       // GMlib::SceneObject* obj = findSceneObj(point);
+    //       // this->getObj(obj);
+    //    }
+
+    //    else
+    //        qDebug()<<"False";
+
+
+
+    //    for (int i=0; i<=_camera->getViewportH(); i+=50){
+    //        for (int j=0; j<=_camera->getViewportW(); j+=50 ){
+
+    //            // qDebug()<< i<<" "<<j;
+
+    //            QPoint point{i,j};
+
+    //            if (findSceneObj(point)){
+    //                GMlib::SceneObject* obj = findSceneObj(point);
+    //                this->getObj(obj);
+    //            }
+
+    //        }
+    //    }
+    // **************************************************************
+}
+
+void Scenario::save() {
+
+    qDebug() << "Saving scene...";
+    stopSimulation(); {
+
+
+        auto filename = std::string("gmlib_save.openddl");
+
+        auto os = std::ofstream(filename,std::ios_base::out);
+        if(!os.is_open()) {
+            std::cerr << "Unable to open " << filename << " for saving..."
+                      << std::endl;
+            return;
+        }
+
+
+        os << "GMlibVersion { int { 0x"
+           << std::setw(6) << std::setfill('0')
+           << std::hex << GM_VERSION
+           << " } }"
+           << std::endl<<std::endl;
+
+
+        auto &scene = *_scene;
+        for( auto i = 0; i < scene.getSize(); ++i ) {
+
+            const auto obj = scene[i];
+            save(os,obj);
+
+        }
+
+
+
+    } startSimulation();
+    qDebug() << "The scene was success saved";
 
 }
-// **************************************************************
 
+void Scenario::save(std::ofstream &os, const GMlib::SceneObject *obj) {
+
+
+    auto cam_obj = dynamic_cast<const GMlib::Camera*>(obj);
+    if(cam_obj) return;
+
+
+    os << obj->getIdentity() << std::endl
+       << "{" << std::endl<<std::endl;
+
+    saveSO(os,obj);
+
+    auto ptorus_obj = dynamic_cast<const GMlib::PTorus<float>*>(obj);
+    if(ptorus_obj)
+        savePT(os,ptorus_obj);
+
+    const auto& children = obj->getChildren();
+    for(auto i = 0; i < children.getSize(); ++i )
+        save(os,children(i));
+
+    os << "}"
+       << std::endl<<std::endl;
+
+}
+
+void Scenario::saveSO(std::ofstream &os, const GMlib::SceneObject *obj) {
+
+    using namespace std;
+    os << "SceneObjectData" << endl
+       << "{" << endl<<endl;
+
+
+    os << "set"<<endl<<"{"<<endl<<"Point {"
+       << " float[3] { " << obj->getPos()(0)<<", "<<obj->getPos()(1)<<", "<<obj->getPos()(2)<<" }"
+       << " }"<<endl;
+    os <<"Vector {"
+      << " float[3] { " << obj->getDir()(0)<<", "<<obj->getDir()(1)<<", "<<obj->getDir()(2)<<" }"
+      << " }"<<endl;
+    os <<"Vector {"
+      << " float[3] { " << obj->getUp()(0)<<", "<<obj->getUp()(1)<<", "<<obj->getUp()(2)<<" }"
+      << " }"<<endl<<"}"<<endl<<endl;
+
+
+    os << "setCollapsed{ bool {"
+       << ( obj->isCollapsed()?"true":"false")
+       << "} }"<<endl<<endl;
+    os << "setLighted{ bool {"
+       << ( obj->isLighted()?"true":"false")
+       << "} }"<<endl<<endl;
+    os << "setVisible{ bool {"
+       << ( obj->isVisible()?"true":"false")
+       << "} }"<<endl<<endl;
+
+
+    os << "setColor"<<endl<<"{"<<endl<<"Color {"
+       << " double[3] { " << obj->getColor().getRedC()<<", "<<obj->getColor().getGreenC()<<", "<<obj->getColor().getBlueC()<<" }"
+       << " }"<<endl<<"}"<<endl<<endl;
+
+
+    os << "setMaterial"<<endl<<"{"<<endl<<"Material"<<endl<<"{"<<endl<<"Color {"
+       << " double[3] { " << obj->getMaterial().getAmb().getRedC()<<", "<<obj->getMaterial().getAmb().getGreenC()<<", "<<obj->getMaterial().getAmb().getBlueC()<<" }"
+       << " }"<<endl;
+    os <<"Color {"
+      << " double[3] { " << obj->getMaterial().getDif().getRedC()<<", "<<obj->getMaterial().getDif().getGreenC()<<", "<<obj->getMaterial().getDif().getBlueC()<<" }"
+      << " }"<<endl;
+    os <<"Color {"
+      << " double[3] { " << obj->getMaterial().getSpc().getRedC()<<", "<<obj->getMaterial().getSpc().getGreenC()<<", "<<obj->getMaterial().getSpc().getBlueC()<<" }"
+      << " }"<<endl;
+    os<< "float {" <<obj->getMaterial().getShininess()  << "}"<<endl
+      << "}"<<endl<<"}"<<endl;
+    os << "}" << endl<<endl;
+
+}
+
+void Scenario::savePT(std::ofstream &os,
+                      const GMlib::PTorus<float> *obj) {
+
+
+    using namespace std;
+
+
+    os << "PSurfData"<<endl<<"{"<<endl
+       <<"enableDefaultVisualize { bool {" << ( obj->getVisualizers()(0)?"true":"false")<<"} "
+      << " }"<<endl<<endl;
+    os <<"replot {"<<endl
+      << "int {" <<obj->getSamplesU()<<"}"<<endl
+      << "int {" <<obj->getSamplesV()<<"}"<<endl
+      << "int {" <<obj->getDerivativesU()<<"}"<<endl
+      << "int {" <<obj->getDerivativesV()<<"}"<<endl;
+    os << "}" <<endl<<"}"<<endl<<endl;
+
+
+
+    os << "PTorusData" << std::endl
+       << "{" << endl;
+
+    os << "setTubeRadius1{ float {"<<  obj->getTubeRadius1()<< "} }"<<endl;
+    os << "setTubeRadius2{ float {"<<  obj->getTubeRadius2()<< "} }"<<endl;
+    os << "setWheelRadius{ float {"<<  obj->getWheelRadius()<< "} }"<<endl;
+
+    os << "}" <<endl<<endl;
+}
 
