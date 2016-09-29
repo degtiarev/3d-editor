@@ -107,14 +107,36 @@ Scenario::initializeScenario() {
     _testtorus = std::make_shared<TestTorus>();
     _testtorus->toggleDefaultVisualizer();
     _testtorus->replot(200,200,1,1);
+    _testtorus->setMaterial(GMlib::GMmaterial::Pewter);
     _scene->insert(_testtorus.get());
 
     _testtorus->test01();
 
-    auto cylinder=new GMlib::PCylinder<float>(1);
+
+    auto cylinder=new GMlib::PCylinder<float>(2,2,15);
     cylinder->toggleDefaultVisualizer();
-    cylinder->replot(200,200,1,1);
+    cylinder->replot(100,100,20,20);
+    cylinder->set(GMlib::Point<float,3>(0,12,0), GMlib::Vector<float,3>( 1.0f, 1.0f, 0.0f ),
+                  GMlib::Vector<float,3>( 0.0f, 0.0f, 1.0f ));
+    cylinder->setMaterial(GMlib::GMmaterial::Bronze);
     _scene->insert(cylinder);
+
+
+    auto sphere=new GMlib::PSphere<float>(2);
+    sphere->setMaterial(GMlib::GMmaterial::PolishedRed);
+    sphere->setLighted(false);
+    sphere->toggleDefaultVisualizer();
+    sphere->replot(50,50,10,10);
+    _scene->insert(sphere);
+
+
+    auto plane=new GMlib::PPlane<float>(GMlib::Point<float,3>(0,12,0), GMlib::Vector<float,3>( 1.0f, 1.0f, 0.0f ),
+                                        GMlib::Vector<float,3>( 0.0f, 0.0f, 1.0f ));
+    plane->setMaterial(GMlib::GMmaterial::Snow);
+    plane->setLighted(false);
+    plane->toggleDefaultVisualizer();
+    plane->replot(50,50,10,10);
+    _scene->insert(plane);
 
 }
 
@@ -464,9 +486,22 @@ void Scenario::save(std::ofstream &os, const GMlib::SceneObject *obj) {
 
     saveSO(os,obj);
 
-    auto ptorus_obj = dynamic_cast<const GMlib::PTorus<float>*>(obj);
-    if(ptorus_obj)
-        savePT(os,ptorus_obj);
+    auto torus = dynamic_cast<const GMlib::PTorus<float>*>(obj);
+    if(torus)
+        savePT(os,torus);
+
+    auto sphere = dynamic_cast<const GMlib::PSphere<float>*>(obj);
+    if(sphere)
+        savePS(os,sphere);
+
+    auto  cylinder = dynamic_cast<const GMlib::PCylinder<float>*>(obj);
+    if(cylinder)
+        savePC(os,cylinder);
+
+    auto  plane = dynamic_cast<const GMlib::PPlane<float>*>(obj);
+    if(plane)
+        savePP(os,plane);
+
 
     const auto& children = obj->getChildren();
     for(auto i = 0; i < children.getSize(); ++i )
@@ -526,12 +561,57 @@ void Scenario::saveSO(std::ofstream &os, const GMlib::SceneObject *obj) {
 
 }
 
-void Scenario::savePT(std::ofstream &os,
-                      const GMlib::PTorus<float> *obj) {
-
+void Scenario::savePT(std::ofstream &os, const GMlib::PTorus<float> *obj) {
 
     using namespace std;
 
+    os << "PSurfData"<<endl<<"{"<<endl
+       <<"enableDefaultVisualize { bool {" << ( obj->getVisualizers()(0)?"true":"false")<<"} "
+      << " }"<<endl<<endl;
+    os <<"replot {"<<endl
+      << "int {" <<obj->getSamplesU()<<"}"<<endl
+      << "int {" <<obj->getSamplesV()<<"}"<<endl
+      << "int {" <<obj->getDerivativesU()<<"}"<<endl
+      << "int {" <<obj->getDerivativesV()<<"}"<<endl;
+    os << "}" <<endl<<"}"<<endl<<endl;
+
+
+    os << "PTorusData" << std::endl
+       << "{" << endl;
+
+    os << "setTubeRadius1{ float {"<<  obj->getTubeRadius1()<< "} }"<<endl;
+    os << "setTubeRadius2{ float {"<<  obj->getTubeRadius2()<< "} }"<<endl;
+    os << "setWheelRadius{ float {"<<  obj->getWheelRadius()<< "} }"<<endl;
+
+    os << "}" <<endl<<endl;
+}
+
+void Scenario::savePS(std::ofstream &os, const GMlib::PSphere<float> *obj) {
+
+    using namespace std;
+
+    os << "PSurfData"<<endl<<"{"<<endl
+       <<"enableDefaultVisualize { bool {" << ( obj->getVisualizers()(0)?"true":"false")<<"} "
+      << " }"<<endl<<endl;
+    os <<"replot {"<<endl
+      << "int {" <<obj->getSamplesU()<<"}"<<endl
+      << "int {" <<obj->getSamplesV()<<"}"<<endl
+      << "int {" <<obj->getDerivativesU()<<"}"<<endl
+      << "int {" <<obj->getDerivativesV()<<"}"<<endl;
+    os << "}" <<endl<<"}"<<endl<<endl;
+
+
+    os << "PSphereData" << std::endl
+       << "{" << endl;
+
+    os << "setRadius{ float {"<<  obj->getRadius()<< "} }"<<endl;
+
+    os << "}" <<endl<<endl;
+}
+
+void Scenario::savePC(std::ofstream &os, const GMlib::PCylinder<float> *obj) {
+
+    using namespace std;
 
     os << "PSurfData"<<endl<<"{"<<endl
        <<"enableDefaultVisualize { bool {" << ( obj->getVisualizers()(0)?"true":"false")<<"} "
@@ -545,13 +625,37 @@ void Scenario::savePT(std::ofstream &os,
 
 
 
-    os << "PTorusData" << std::endl
+    os << "PCylinderData" << std::endl
        << "{" << endl;
 
-    os << "setTubeRadius1{ float {"<<  obj->getTubeRadius1()<< "} }"<<endl;
-    os << "setTubeRadius2{ float {"<<  obj->getTubeRadius2()<< "} }"<<endl;
-    os << "setWheelRadius{ float {"<<  obj->getWheelRadius()<< "} }"<<endl;
+    os <<"setConstants {"<<endl
+      << "float {" <<obj->getRadiusX()<<"}"<<endl
+      << "float {" <<obj->getRadiusY()<<"}"<<endl
+      << "float {" <<obj->getHeight()<<"}"<<endl;
+    os << "}" <<endl<<"}"<<endl<<endl;
 
     os << "}" <<endl<<endl;
 }
 
+void Scenario::savePP(std::ofstream &os, const GMlib::PPlane<float> *obj) {
+
+    using namespace std;
+
+    os << "PSurfData"<<endl<<"{"<<endl
+       <<"enableDefaultVisualize { bool {" << ( obj->getVisualizers()(0)?"true":"false")<<"} "
+      << " }"<<endl<<endl;
+    os <<"replot {"<<endl
+      << "int {" <<obj->getSamplesU()<<"}"<<endl
+      << "int {" <<obj->getSamplesV()<<"}"<<endl
+      << "int {" <<obj->getDerivativesU()<<"}"<<endl
+      << "int {" <<obj->getDerivativesV()<<"}"<<endl;
+    os << "}" <<endl<<"}"<<endl<<endl;
+
+
+    os << "PPlaneData" << std::endl
+       << "{" << endl;
+
+    //os << "setRadius{ float {"<<  obj->getRadius()<< "} }"<<endl;
+
+    os << "}" <<endl<<endl;
+}

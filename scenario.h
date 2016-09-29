@@ -20,6 +20,9 @@ class RenderTarget;
 class SceneObject;
 
 template <typename T> class PTorus;
+template <typename T> class PSphere;
+template <typename T> class PCylinder;
+template <typename T> class PPlane;
 template <typename T, int n> class Point;
 // **************************************************************
 }
@@ -110,6 +113,9 @@ private:
     void         save( std::ofstream& os, const GMlib::SceneObject* obj);
     void         saveSO( std::ofstream& os, const GMlib::SceneObject* obj);
     void         savePT( std::ofstream& os, const GMlib::PTorus<float>* obj);
+    void         savePS(std::ofstream &os, const GMlib::PSphere<float> *obj);
+    void         savePC(std::ofstream &os, const GMlib::PCylinder<float> *obj);
+    void         savePP(std::ofstream &os, const GMlib::PPlane<float> *obj);
 
 public:
     static Scenario&                                  instance();
