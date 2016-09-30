@@ -59,10 +59,10 @@ public:
 
 
     // **************************************************************
-    void                                              rotateVCamera();
-    void                                              rotateHCamera();
-    void                                              rotateVCamera_L();
-    void                                              rotateHCamera_L();
+    //    void                                              rotateVCamera();
+    //    void                                              rotateHCamera();
+    //    void                                              rotateVCamera_L();
+    //    void                                              rotateHCamera_L();
 
     void                                              zoomCameraW(const float &zoom_var);
     void                                              moveCamera_M(const QPoint &f, const QPoint &e);
@@ -76,7 +76,22 @@ public:
     GMlib::SceneObject*                               findSceneObj(QPoint &pos);
     GMlib::Point<int, 2>                              convertToGMlibPoint(const QPoint& pos);
     void                                              getObj(GMlib::SceneObject *selected_obj);
-    void                                              deselectObj(GMlib::SceneObject *selected_obj);
+    void                                              deselectObj();
+    void                                              selectGroupObj();
+    GMlib::SceneObject*                               findAllObj();
+    void                                              setSelectObj(GMlib::SceneObject *obj);
+
+    void                                              selectAllObj();
+    void                                              lockOnObj( GMlib::SceneObject* loking_obj);
+    void                                              storeObj(GMlib::SceneObject *obj);
+    void                                              selectChildrenObj(GMlib::SceneObject* object);
+    void                                              deselectAllObj();
+    void                                              toggleSelectAll();
+    void                                              moveObj(QPoint &pos,QPoint &prev);
+
+    void                                              rotateObj(QPoint &pos,QPoint &prev);
+    void                                              scaleObj(int &delta);
+
     void                                              selectAll();
 
 
@@ -94,6 +109,10 @@ protected:
 private:
     std::shared_ptr<GMlib::Scene>                     _scene;
     int                                               _timer_id;
+
+    GMlib::SceneObject*                               _selectedObjVar=nullptr;
+    GMlib::SceneObject*                               _foundObjVar=nullptr;
+    bool                                              ifSelectedVar;
 
     //select_renderer
     std::shared_ptr<GMlib::DefaultSelectRenderer>     _select_renderer {nullptr};

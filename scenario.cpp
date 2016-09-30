@@ -231,29 +231,29 @@ GMlib::Point<int, 2> Scenario::fromQtToGMlibViewPoint(const GMlib::Camera& cam, 
 }
 
 
-//Camera Vertical rotation right
-void Scenario::rotateVCamera(){
-    _camera->lock(_testtorus.get());
-    _camera->rotateGlobal(GMlib::Angle(0.05f), GMlib::Vector<float,3>( 1.0f, 0.0f, 0.0f ));
-}
+////Camera Vertical rotation right
+//void Scenario::rotateVCamera(){
+//    _camera->lock(_testtorus.get());
+//    _camera->rotateGlobal(GMlib::Angle(0.05f), GMlib::Vector<float,3>( 1.0f, 0.0f, 0.0f ));
+//}
 
-//Camera Horizontal rotation right
-void Scenario::rotateHCamera(){
-    _camera->lock(_testtorus.get());
-    _camera->rotateGlobal(GMlib::Angle(0.05f),  GMlib::Vector<float,3>( 0.0f, 0.0f, 1.0f ));}
+////Camera Horizontal rotation right
+//void Scenario::rotateHCamera(){
+//    _camera->lock(_testtorus.get());
+//    _camera->rotateGlobal(GMlib::Angle(0.05f),  GMlib::Vector<float,3>( 0.0f, 0.0f, 1.0f ));}
 
-//Camera Vertical rotation left
-void Scenario::rotateVCamera_L(){
-    _camera->lock(_testtorus.get());
-    _camera->rotateGlobal(GMlib::Angle(-0.05f), GMlib::Vector<float,3>( 1.0f, 0.0f, 0.0f ));
-}
+////Camera Vertical rotation left
+//void Scenario::rotateVCamera_L(){
+//    _camera->lock(_testtorus.get());
+//    _camera->rotateGlobal(GMlib::Angle(-0.05f), GMlib::Vector<float,3>( 1.0f, 0.0f, 0.0f ));
+//}
 
-//Camera Horizontal rotation left
-void Scenario::rotateHCamera_L(){
-    _camera->lock(_testtorus.get());
-    _camera->rotateGlobal(GMlib::Angle(-0.05f), GMlib::Vector<float,3>( 0.0f, 0.0f, 1.0f ));
-    //_camera->move(0.5);
-}
+////Camera Horizontal rotation left
+//void Scenario::rotateHCamera_L(){
+//    _camera->lock(_testtorus.get());
+//    _camera->rotateGlobal(GMlib::Angle(-0.05f), GMlib::Vector<float,3>( 0.0f, 0.0f, 1.0f ));
+//    //_camera->move(0.5);
+//}
 
 //Converting a point for camera movement
 //GMlib::Point<int,2> Scenario::fromQtToGMlibViewPoint(const GMlib::Camera& cam, const QPoint& pos) {
@@ -263,10 +263,6 @@ void Scenario::rotateHCamera_L(){
 
 //}
 
-//Lock Object
-void Scenario::lockObject(const bool &lock_var){
-    if (lock_var==true){_camera->lock(_testtorus.get());}
-}
 
 //Zoom
 void Scenario::zoomCameraW(const float &zoom_var){
@@ -300,7 +296,7 @@ void Scenario::NewMoveCamera(const QPoint &begin_pos, const QPoint &end_pos) {
 void Scenario::panVertical(const int &_delta)
 {
     const float scale = cameraSpeedScale();
-    auto delta = _delta;
+    auto delta = _delta/5;
     GMlib::Vector<float,2> delta_vec(0.0f,delta * scale / _camera->getViewportW());
     _camera->move(delta_vec);
 }
@@ -309,7 +305,7 @@ void Scenario::panVertical(const int &_delta)
 void Scenario::panHorizontal(const int &_delta)
 {
     const float scale = cameraSpeedScale();
-    auto delta = _delta;
+    auto delta = _delta/5;
     GMlib::Vector<float,2> delta_vec(delta * scale / _camera->getViewportH(),0.0f);
     _camera->move(delta_vec);
 }
@@ -348,18 +344,73 @@ GMlib::SceneObject* Scenario::findSceneObj(QPoint &pos)
 }
 
 //Select object
-void Scenario::getObj(GMlib::SceneObject *selected_obj){
-    //qDebug() <<selected_obj->getTypeId();
-    selected_obj->setSelected(true);
-    qDebug()<<selected_obj->isSelected();
-    //
-    //selected_obj->setColor();
+void
+Scenario::getObj(GMlib::SceneObject *selected_obj){
+
+    if( !selected_obj ) return;
+
+    auto selected = selected_obj->isSelected(); //bool
+
+    _scene->removeSelections(); //for selecting only 1 object at a time
+    selected_obj->setSelected( !selected );
+
+    _selectedObjVar = selected_obj;
+    qDebug()<<selected_obj->getPos()(0) << selected_obj->getPos()(1);
 }
 
-void Scenario::deselectObj(GMlib::SceneObject *selected_obj)
+void
+Scenario::deselectObj()
 {
-    if (selected_obj->isSelected()){selected_obj->setSelected(false);}
-    //selected_obj->setSelected(false);
+    if (_selectedObjVar and _selectedObjVar->isSelected()){
+        _selectedObjVar->setSelected(false);}
+
+}
+
+void
+Scenario::lockOnObj(GMlib::SceneObject *loking_obj)
+{
+    if(!loking_obj->isLocked()){_camera->lock(loking_obj);}
+}
+
+void
+Scenario::storeObj(GMlib::SceneObject *obj)
+{
+    lockOnObj(obj);
+}
+
+void
+Scenario::scaleObj(int &delta)
+{
+    const GMlib::Array<GMlib::SceneObject*> &sel_objs = _scene->getSelectedObjects();
+    const float plus_val=1.02;
+    const float minus_val=0.98;
+    for( int i = 0; i < sel_objs.getSize(); i++ ) {
+        GMlib::SceneObject* obj = sel_objs(i);
+        if(delta>0){
+            obj->scale( GMlib::Vector<float,3>( 0.1f + plus_val) );
+        }
+        else{obj->scale( GMlib::Vector<float,3>( 0.1f - minus_val) );}
+    }
+}
+void
+Scenario::rotateObj(QPoint &pos, QPoint &prev)
+{
+    auto r_pos = fromQtToGMlibViewPoint(*_camera.get(),pos);
+    auto r_prev = fromQtToGMlibViewPoint(*_camera.get(),prev);
+
+    auto rot_X_pos_dif = float(r_pos(0)-r_prev(0));
+    auto rot_Y_pos_dif = float(r_pos(1)-r_prev(1));
+
+    GMlib::Vector<float,3> rot(rot_X_pos_dif,rot_Y_pos_dif,0.0f);
+    rot=rot*0.001;
+
+    GMlib::Angle ang(M_2PI * sqrt(
+                         pow( double( rot_X_pos_dif) / _camera->getViewportW(), 2 ) +
+                         pow( double( rot_Y_pos_dif) / _camera->getViewportH(), 2 ) )
+                     );
+
+    if (_selectedObjVar)
+        _selectedObjVar->rotateGlobal(ang,rot);
 }
 
 void Scenario::switchCam(int n)
@@ -400,41 +451,77 @@ void Scenario::switchCam(int n)
 
 }
 
-void Scenario::selectAll()
+void
+Scenario::selectChildrenObj(GMlib::SceneObject *object)
+{
+    GMlib::Camera *cam   = dynamic_cast<GMlib::Camera*>( object );
+    GMlib::Light  *light = dynamic_cast<GMlib::Light*>( object );
+    if( !cam && !light ) {
+        object->setSelected(true);
+
+        for( int i = 0; i < object->getChildren().getSize(); i++ )
+        {
+            selectChildrenObj((object->getChildren())[i] );
+        }
+    }
+}
+
+void
+Scenario::deselectAllObj()
+{_scene->removeSelections();}
+
+void
+Scenario::selectAllObj()
+{
+    _scene->removeSelections();
+
+    GMlib::Scene *scene = _scene.get();
+    for( int i = 0; i < scene->getSize(); ++i )
+    {
+        selectChildrenObj((*scene)[i] );
+    }
+
+    qDebug()<<"Selected object after selection"<< _scene->getSelectedObjects().getSize();
+}
+void
+Scenario::toggleSelectAll()
 {
 
+    qDebug()<<"Toogle select"<<_scene->getSelectedObjects().getSize();
 
-    //    QPoint point{30,40};
-
-    //    if (fin dSceneObj(point)){
-    //        qDebug()<<"True";
-
-
-    //       // GMlib::SceneObject* obj = findSceneObj(point);
-    //       // this->getObj(obj);
-    //    }
-
-    //    else
-    //        qDebug()<<"False";
-
-
-
-    //    for (int i=0; i<=_camera->getViewportH(); i+=50){
-    //        for (int j=0; j<=_camera->getViewportW(); j+=50 ){
-
-    //            // qDebug()<< i<<" "<<j;
-
-    //            QPoint point{i,j};
-
-    //            if (findSceneObj(point)){
-    //                GMlib::SceneObject* obj = findSceneObj(point);
-    //                this->getObj(obj);
-    //            }
-
-    //        }
-    //    }
-    // **************************************************************
+    if( _scene->getSelectedObjects().getSize() > 0 )
+    {
+        deselectAllObj();
+    }
+    else
+    {
+        selectAllObj();
+    }
 }
+void
+Scenario::moveObj(QPoint &pos, QPoint &prev)
+{
+    auto _pos = fromQtToGMlibViewPoint(*_camera.get(),pos);
+    auto _prev = fromQtToGMlibViewPoint(*_camera.get(),prev);
+
+    const float scale = cameraSpeedScale();
+    auto tmp1 = -(_pos(0) - _prev(0))*scale / _camera->getViewportW();
+    auto tmp2 = -(_pos(1) - _prev(1))*scale / _camera->getViewportH();
+    GMlib::Vector<float,3> delta (tmp1,tmp2,0);
+
+    const GMlib::Array<GMlib::SceneObject*> &sel_objs = _scene->getSelectedObjects();
+    for( int i = 0; i < sel_objs.getSize(); i++ ) {
+
+        GMlib::SceneObject* obj = sel_objs(i);
+
+        qDebug()<<delta(0) << delta(1);
+        obj->translateGlobal(delta,true);
+
+
+    }
+
+}
+
 
 void Scenario::save() {
 
@@ -659,3 +746,4 @@ void Scenario::savePP(std::ofstream &os, const GMlib::PPlane<float> *obj) {
 
     os << "}" <<endl<<endl;
 }
+

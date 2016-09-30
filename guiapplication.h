@@ -26,7 +26,9 @@ private:
     Scenario                                    _scenario;
     std::queue<std::shared_ptr<QInputEvent>> _input_events;
 
+
     // **************************************************************
+    bool                                        _Mouse_pressed;
     bool _leftMousePressed;
     QPoint _startpos;
     QPoint _endpos;
@@ -35,8 +37,8 @@ private:
 
 private slots:
 
-    void handleGLInputEvents();
-    void handleKeyPress(QKeyEvent *);
+    void                                        handleGLInputEvents();
+    void                                        handleKeyPress(QKeyEvent *);
 
 
     virtual void                                onSceneGraphInitialized();
