@@ -96,6 +96,7 @@ public:
 
 
     void         save();
+    void          load();
 
     GMlib::Point<int, 2> fromQtToGMlibViewPoint(const GMlib::Camera& cam, const QPoint& pos);
 

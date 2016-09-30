@@ -158,8 +158,8 @@ void GuiApplication::handleKeyPress(QKeyEvent *e)
     if(e->key()==Qt::Key_4){_scenario.switchCam(4);}
 
     if(e->key()== Qt::Key_S) {_scenario.save();}
+    if(e->key()==Qt::Key_L) {_scenario.load();}
     if(e->key()==Qt::Key_A){ _input_events.push(std::make_shared<QKeyEvent>(*e));}
-
 }
 
 
@@ -172,7 +172,6 @@ void GuiApplication::handleMouseButtonPressedEvents(QMouseEvent *m) {
 
     if( m->buttons() == Qt::LeftButton ) {
 
-        // qDebug() << "Left Mouse Button Pressed";
         _leftMousePressed = true;
         _input_events.push(std::make_shared<QMouseEvent>(*m));
     }
@@ -182,7 +181,6 @@ void GuiApplication::handleMouseButtonPressedEvents(QMouseEvent *m) {
         _input_events.push(std::make_shared<QMouseEvent>(*m));
     }
 
-    // if (m->buttons()==Qt::modifi)
 
 }
 
