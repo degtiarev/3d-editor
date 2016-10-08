@@ -24,6 +24,9 @@ template <typename T> class PSphere;
 template <typename T> class PCylinder;
 template <typename T> class PPlane;
 template <typename T, int n> class Point;
+template <typename T, int n> class Vector;
+
+class Angle;
 // **************************************************************
 }
 
@@ -63,6 +66,13 @@ public:
     //    void                                              rotateHCamera();
     //    void                                              rotateVCamera_L();
     //    void                                              rotateHCamera_L();
+
+    void                                              camFly(GMlib::Vector<float,3> dS, GMlib::Angle dA, GMlib::Vector<float,3> axis);
+
+    void                                              camFlyUp();
+    void                                              camFlyDown();
+    void                                              camFlyRight();
+    void                                              camFlyLeft();
 
     void                                              zoomCameraW(const float &zoom_var);
     void                                              moveCamera_M(const QPoint &f, const QPoint &e);

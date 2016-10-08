@@ -256,6 +256,49 @@ GMlib::Point<int, 2> Scenario::fromQtToGMlibViewPoint(const GMlib::Camera& cam, 
     return GMlib::Point<int, 2> {p1, p2};
 }
 
+void Scenario::camFly(GMlib::Vector<float,3> dS, GMlib::Angle dA, GMlib::Vector<float,3> axis)
+{
+    _camera->translateGlobal(dS);
+    _camera->rotateGlobal(dA,axis);
+}
+
+void Scenario::camFlyUp()
+{
+    auto dS = GMlib::Vector<float,3>(0,0,0.1);
+    auto dA = GMlib::Angle(0);
+    auto axis = GMlib::Vector<float,3>(0,0,1);
+
+    camFly(dS,dA,axis);
+}
+
+void Scenario::camFlyDown()
+{
+    auto dS = GMlib::Vector<float,3>(0,0,-0.1);
+    auto dA = GMlib::Angle(0);
+    auto axis = GMlib::Vector<float,3>(0,0,1);
+
+    camFly(dS,dA,axis);
+}
+
+
+void Scenario::camFlyRight()
+{
+    auto dS = GMlib::Vector<float,3>(0.1,0,0);
+    auto dA = GMlib::Angle(0);
+    auto axis = GMlib::Vector<float,3>(0,0,1);
+
+    camFly(dS,dA,axis);
+}
+
+void Scenario::camFlyLeft()
+{
+    auto dS = GMlib::Vector<float,3>(-0.1,0,0);
+    auto dA = GMlib::Angle(0);
+    auto axis = GMlib::Vector<float,3>(0,0,1);
+
+    camFly(dS,dA,axis);
+}
+
 
 ////Camera Vertical rotation right
 //void Scenario::rotateVCamera(){
@@ -775,63 +818,63 @@ void Scenario::savePP(std::ofstream &os, const GMlib::PPlane<float> *obj) {
 
 void Scenario::load() {
 
-  qDebug() << "Open scene...";
-  //SimStateLock a(*this);
-  stopSimulation();
+    qDebug() << "Open scene...";
+    //SimStateLock a(*this);
+    stopSimulation();
 
 
-  auto filename = std::string("gmlib_save.openddl");
+    auto filename = std::string("gmlib_save.openddl");
 
-  auto is = std::ifstream(filename,std::ios_base::in);
-  if(!is.is_open()) {
-    std::cerr << "Unable to open " << filename << " for reading..."
-              << std::endl;
-    return;
-  }
+    auto is = std::ifstream(filename,std::ios_base::in);
+    if(!is.is_open()) {
+        std::cerr << "Unable to open " << filename << " for reading..."
+                  << std::endl;
+        return;
+    }
 
-  is.seekg( 0, std::ios_base::end );
-  auto buff_length = is.tellg();
-  is.seekg( 0, std::ios_base::beg );
+    is.seekg( 0, std::ios_base::end );
+    auto buff_length = is.tellg();
+    is.seekg( 0, std::ios_base::beg );
 
-  std::vector<char> buffer(buff_length);
-  is.read(buffer.data(),buff_length);
-
-
-  std::cout << "Buffer length: " << buff_length << std::endl;
-
-  GMlibSceneLoaderDataDescription gsdd;
-
-  ODDL::DataResult result = gsdd.ProcessText(buffer.data());
-  if(result != ODDL::kDataOkay) {
-
-    auto res_to_char = [](auto nr, const ODDL::DataResult& result) {
-      return char(((0xff << (8*nr)) & result ) >> (8*nr));
-    };
-
-    auto res_to_str = [&res_to_char](const ODDL::DataResult& result) {
-      return std::string() + res_to_char(3,result) + res_to_char(2,result) + res_to_char(1,result) + res_to_char(0,result);
-    };
-
-    std::cerr << "Data result no A-OK: " << res_to_str(result) << " (" << result << ")" << std::endl;
-    return;
-  }
+    std::vector<char> buffer(buff_length);
+    is.read(buffer.data(),buff_length);
 
 
+    std::cout << "Buffer length: " << buff_length << std::endl;
 
-  std::cout << "Data result A-OK" << std::endl;
-  auto structure = gsdd.GetRootStructure()->GetFirstSubnode();
-  while(structure) {
+    GMlibSceneLoaderDataDescription gsdd;
+
+    ODDL::DataResult result = gsdd.ProcessText(buffer.data());
+    if(result != ODDL::kDataOkay) {
+
+        auto res_to_char = [](auto nr, const ODDL::DataResult& result) {
+            return char(((0xff << (8*nr)) & result ) >> (8*nr));
+        };
+
+        auto res_to_str = [&res_to_char](const ODDL::DataResult& result) {
+            return std::string() + res_to_char(3,result) + res_to_char(2,result) + res_to_char(1,result) + res_to_char(0,result);
+        };
+
+        std::cerr << "Data result no A-OK: " << res_to_str(result) << " (" << result << ")" << std::endl;
+        return;
+    }
 
 
-    // Do something ^^,
-    // Travers the ODDL structures and build your scene objects
+
+    std::cout << "Data result A-OK" << std::endl;
+    auto structure = gsdd.GetRootStructure()->GetFirstSubnode();
+    while(structure) {
 
 
-    structure = structure->Next();
-  }
+        // Do something ^^,
+        // Travers the ODDL structures and build your scene objects
 
 
-   //Load GMlib::SceneObjects into the scene.
+        structure = structure->Next();
+    }
+
+
+    //Load GMlib::SceneObjects into the scene.
 
 }
 

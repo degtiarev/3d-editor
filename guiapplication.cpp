@@ -147,10 +147,11 @@ void GuiApplication::handleKeyPress(QKeyEvent *e)
     if (e->key()==Qt::Key_P) { _input_events.push(std::make_shared<QKeyEvent>(*e)); }
     if(e->key()==Qt::Key_R){_scenario.toggleSimulation();}
 
-    //    if(e->key()==Qt::Key_Up){_scenario.rotateVCamera();}
-    //    if(e->key()==Qt::Key_Down){_scenario.rotateHCamera();}
-    //    if(e->key()==Qt::Key_Left){_scenario.rotateVCamera_L();}
-    //    if(e->key()==Qt::Key_Right){_scenario.rotateHCamera_L();}
+    if (e->key() == Qt::Key_Up){_scenario.camFlyUp();}
+    if (e->key() == Qt::Key_Down){_scenario.camFlyDown();}
+    if (e->key() == Qt::Key_Right){_scenario.camFlyRight();}
+    if (e->key() == Qt::Key_Left){_scenario.camFlyLeft();}
+
 
     if(e->key()==Qt::Key_1){_scenario.switchCam(1);}
     if(e->key()==Qt::Key_2){_scenario.switchCam(2);}
@@ -225,7 +226,6 @@ void GuiApplication::handleMouseWheel(QWheelEvent *w){
         _input_events.push(std::make_shared<QWheelEvent>(*w));
     }
 }
-
 
 // **************************************************************
 
