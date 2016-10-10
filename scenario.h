@@ -62,10 +62,6 @@ public:
 
 
     // **************************************************************
-    //    void                                              rotateVCamera();
-    //    void                                              rotateHCamera();
-    //    void                                              rotateVCamera_L();
-    //    void                                              rotateHCamera_L();
 
     void                                              camFly(GMlib::Vector<float,3> dS, GMlib::Angle dA, GMlib::Vector<float,3> axis);
 
@@ -103,10 +99,14 @@ public:
     void                                              scaleObj(int &delta);
 
     void                                              selectAll();
+    void                                              unlockObjs();
+    void                                              insertObject();
+    void                                              changeColor(GMlib::SceneObject* obj);
+    GMlib::SceneObject*                               _selectedObjVar=nullptr;
+    GMlib::SceneObject*                               _foundObjVar=nullptr;
 
-
-    void         save();
-    void          load();
+    void                                               save();
+    void                                               load();
 
     GMlib::Point<int, 2> fromQtToGMlibViewPoint(const GMlib::Camera& cam, const QPoint& pos);
 
@@ -121,8 +121,7 @@ private:
     std::shared_ptr<GMlib::Scene>                     _scene;
     int                                               _timer_id;
 
-    GMlib::SceneObject*                               _selectedObjVar=nullptr;
-    GMlib::SceneObject*                               _foundObjVar=nullptr;
+
     bool                                              ifSelectedVar;
 
     //select_renderer

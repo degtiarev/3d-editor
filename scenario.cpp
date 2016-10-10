@@ -59,8 +59,7 @@ Scenario::~Scenario() {
     _instance.release();
 }
 
-void
-Scenario::deinitialize() {
+void Scenario::deinitialize() {
 
     stopSimulation();
 
@@ -83,8 +82,7 @@ Scenario::deinitialize() {
     GMlib::GL::OpenGLManager::cleanUp();
 }
 
-void
-Scenario::initialize() {
+void Scenario::initialize() {
 
     // Setup and initialized GMlib GL backend
     GMlib::GL::OpenGLManager::init();
@@ -93,8 +91,7 @@ Scenario::initialize() {
     _scene = std::make_shared<GMlib::Scene>();
 }
 
-void
-Scenario::initializeScenario() {
+void Scenario::initializeScenario() {
 
     // Insert a light
     auto init_light_pos = GMlib::Point<GLfloat,3>( 2.0, 4.0, 10 );
@@ -148,6 +145,7 @@ Scenario::initializeScenario() {
     _scene->insert(cylinder);
 
 
+
     auto sphere=new GMlib::PSphere<float>(2);
     sphere->setMaterial(GMlib::GMmaterial::PolishedRed);
     sphere->setLighted(false);
@@ -168,14 +166,11 @@ Scenario::initializeScenario() {
 
 std::unique_ptr<Scenario> Scenario::_instance {nullptr};
 
-Scenario&
-Scenario::instance() { return *_instance; }
+Scenario& Scenario::instance() { return *_instance; }
 
-void
-Scenario::prepare() { _scene->prepare(); }
+void Scenario::prepare() { _scene->prepare(); }
 
-void
-Scenario::render( const QRect& viewport_in, GMlib::RenderTarget& target ) {
+void Scenario::render( const QRect& viewport_in, GMlib::RenderTarget& target ) {
 
     // Update viewport
     if(_viewport != viewport_in) {
@@ -191,8 +186,7 @@ Scenario::render( const QRect& viewport_in, GMlib::RenderTarget& target ) {
     _renderer->render(target);
 }
 
-void
-Scenario::startSimulation() {
+void Scenario::startSimulation() {
 
     if( _timer_id || _scene->isRunning() )
         return;
@@ -201,8 +195,7 @@ Scenario::startSimulation() {
     _scene->start();
 }
 
-void
-Scenario::stopSimulation() {
+void Scenario::stopSimulation() {
 
     if( !_timer_id || !_scene->isRunning() )
         return;
@@ -212,8 +205,7 @@ Scenario::stopSimulation() {
     _timer_id = 0;
 }
 
-void
-Scenario::timerEvent(QTimerEvent* e) {
+void Scenario::timerEvent(QTimerEvent* e) {
 
     e->accept();
 
@@ -221,11 +213,9 @@ Scenario::timerEvent(QTimerEvent* e) {
     prepare();
 }
 
-void
-Scenario::toggleSimulation() { _scene->toggleRun(); }
+void Scenario::toggleSimulation() { _scene->toggleRun(); }
 
-void
-Scenario::replotTesttorus()
+void Scenario::replotTesttorus()
 {
     _testtorus->replot(4,4,1,1);\
 }
@@ -280,7 +270,6 @@ void Scenario::camFlyDown()
     camFly(dS,dA,axis);
 }
 
-
 void Scenario::camFlyRight()
 {
     auto dS = GMlib::Vector<float,3>(0.1,0,0);
@@ -298,40 +287,6 @@ void Scenario::camFlyLeft()
 
     camFly(dS,dA,axis);
 }
-
-
-////Camera Vertical rotation right
-//void Scenario::rotateVCamera(){
-//    _camera->lock(_testtorus.get());
-//    _camera->rotateGlobal(GMlib::Angle(0.05f), GMlib::Vector<float,3>( 1.0f, 0.0f, 0.0f ));
-//}
-
-////Camera Horizontal rotation right
-//void Scenario::rotateHCamera(){
-//    _camera->lock(_testtorus.get());
-//    _camera->rotateGlobal(GMlib::Angle(0.05f),  GMlib::Vector<float,3>( 0.0f, 0.0f, 1.0f ));}
-
-////Camera Vertical rotation left
-//void Scenario::rotateVCamera_L(){
-//    _camera->lock(_testtorus.get());
-//    _camera->rotateGlobal(GMlib::Angle(-0.05f), GMlib::Vector<float,3>( 1.0f, 0.0f, 0.0f ));
-//}
-
-////Camera Horizontal rotation left
-//void Scenario::rotateHCamera_L(){
-//    _camera->lock(_testtorus.get());
-//    _camera->rotateGlobal(GMlib::Angle(-0.05f), GMlib::Vector<float,3>( 0.0f, 0.0f, 1.0f ));
-//    //_camera->move(0.5);
-//}
-
-//Converting a point for camera movement
-//GMlib::Point<int,2> Scenario::fromQtToGMlibViewPoint(const GMlib::Camera& cam, const QPoint& pos) {
-
-//    int h = cam.getViewportH(); // Height of the camera's viewport
-//    return GMlib::Vector<int,2>(int(pos.x()),h-int(pos.y())-1);
-
-//}
-
 
 //Zoom
 void Scenario::zoomCameraW(const float &zoom_var){
@@ -413,8 +368,7 @@ GMlib::SceneObject* Scenario::findSceneObj(QPoint &pos)
 }
 
 //Select object
-void
-Scenario::getObj(GMlib::SceneObject *selected_obj){
+void Scenario::getObj(GMlib::SceneObject *selected_obj){
 
     if( !selected_obj ) return;
 
@@ -427,28 +381,39 @@ Scenario::getObj(GMlib::SceneObject *selected_obj){
     qDebug()<<selected_obj->getPos()(0) << selected_obj->getPos()(1);
 }
 
-void
-Scenario::deselectObj()
+void Scenario::deselectObj()
 {
     if (_selectedObjVar and _selectedObjVar->isSelected()){
         _selectedObjVar->setSelected(false);}
 
 }
 
-void
-Scenario::lockOnObj(GMlib::SceneObject *loking_obj)
+void Scenario::lockOnObj(GMlib::SceneObject *loking_obj)
 {
     if(!loking_obj->isLocked()){_camera->lock(loking_obj);}
 }
 
+//unlock camera, return camera position to default
 void
-Scenario::storeObj(GMlib::SceneObject *obj)
+Scenario::unlockObjs()
+{    auto init_cam_pos       = GMlib::Point<float,3>(  0.0f, 0.0f, 0.0f );
+     auto init_cam_dir       = GMlib::Vector<float,3>( 0.0f, 1.0f, 0.0f );
+      auto init_cam_up        = GMlib::Vector<float,3>(  0.0f, 0.0f, 1.0f );
+
+       if(_camera->isLocked()){
+           _camera->unLock();
+           _camera->set(init_cam_pos,init_cam_dir,init_cam_up);
+           _camera->rotateGlobal( GMlib::Angle(-45), GMlib::Vector<float,3>( 1.0f, 0.0f, 0.0f ) );
+           _camera->translateGlobal( GMlib::Vector<float,3>( 0.0f, -20.0f, 20.0f ) );
+       }
+}
+
+void Scenario::storeObj(GMlib::SceneObject *obj)
 {
     lockOnObj(obj);
 }
 
-void
-Scenario::scaleObj(int &delta)
+void Scenario::scaleObj(int &delta)
 {
     const GMlib::Array<GMlib::SceneObject*> &sel_objs = _scene->getSelectedObjects();
     const float plus_val=1.02;
@@ -461,8 +426,8 @@ Scenario::scaleObj(int &delta)
         else{obj->scale( GMlib::Vector<float,3>( 0.1f - minus_val) );}
     }
 }
-void
-Scenario::rotateObj(QPoint &pos, QPoint &prev)
+
+void Scenario::rotateObj(QPoint &pos, QPoint &prev)
 {
     auto r_pos = fromQtToGMlibViewPoint(*_camera.get(),pos);
     auto r_prev = fromQtToGMlibViewPoint(*_camera.get(),prev);
@@ -520,8 +485,7 @@ void Scenario::switchCam(int n)
 
 }
 
-void
-Scenario::selectChildrenObj(GMlib::SceneObject *object)
+void Scenario::selectChildrenObj(GMlib::SceneObject *object)
 {
     GMlib::Camera *cam   = dynamic_cast<GMlib::Camera*>( object );
     GMlib::Light  *light = dynamic_cast<GMlib::Light*>( object );
@@ -535,12 +499,10 @@ Scenario::selectChildrenObj(GMlib::SceneObject *object)
     }
 }
 
-void
-Scenario::deselectAllObj()
+void Scenario::deselectAllObj()
 {_scene->removeSelections();}
 
-void
-Scenario::selectAllObj()
+void Scenario::selectAllObj()
 {
     _scene->removeSelections();
 
@@ -552,10 +514,9 @@ Scenario::selectAllObj()
 
     qDebug()<<"Selected object after selection"<< _scene->getSelectedObjects().getSize();
 }
-void
-Scenario::toggleSelectAll()
-{
 
+void Scenario::toggleSelectAll()
+{
     qDebug()<<"Toogle select"<<_scene->getSelectedObjects().getSize();
 
     if( _scene->getSelectedObjects().getSize() > 0 )
@@ -567,8 +528,8 @@ Scenario::toggleSelectAll()
         selectAllObj();
     }
 }
-void
-Scenario::moveObj(QPoint &pos, QPoint &prev)
+
+void Scenario::moveObj(QPoint &pos, QPoint &prev)
 {
     auto _pos = fromQtToGMlibViewPoint(*_camera.get(),pos);
     auto _prev = fromQtToGMlibViewPoint(*_camera.get(),prev);
@@ -591,6 +552,33 @@ Scenario::moveObj(QPoint &pos, QPoint &prev)
 
 }
 
+//change Color
+void Scenario::changeColor(GMlib::SceneObject* obj)
+{
+    //const GMlib::Array<GMlib::SceneObject*> &sel_objs = _scene->getSelectedObjects();
+    std::vector<GMlib::Material> colors=
+    {GMlib::GMmaterial::BlackPlastic,GMlib::GMmaterial::BlackRubber,
+     GMlib::GMmaterial::Brass,GMlib::GMmaterial::Bronze,
+     GMlib::GMmaterial::Chrome,GMlib::GMmaterial::Copper,
+     GMlib::GMmaterial::Emerald,GMlib::GMmaterial::Gold,
+     GMlib::GMmaterial::Jade,GMlib::GMmaterial::Obsidian,
+     GMlib::GMmaterial::Pearl,GMlib::GMmaterial::Pewter,
+     GMlib::GMmaterial::Plastic,GMlib::GMmaterial::PolishedBronze,
+     GMlib::GMmaterial::PolishedCopper,GMlib::GMmaterial::PolishedGold,
+     GMlib::GMmaterial::PolishedGreen,GMlib::GMmaterial::PolishedRed,
+     GMlib::GMmaterial::PolishedSilver};
+
+    const auto cj = obj->getMaterial();
+    int color_num=0;
+    for(unsigned int i=0;i<colors.size();++i){
+        if (cj == colors[i]){color_num = i;
+            break;}
+    }
+    color_num++;
+    if(color_num<20){
+        obj->setMaterial(colors[color_num]);}
+    else obj->setMaterial(colors[0]);
+}
 
 void Scenario::save() {
 
@@ -878,4 +866,5 @@ void Scenario::load() {
 
 }
 
+// **************************************************************
 

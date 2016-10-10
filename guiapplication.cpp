@@ -73,6 +73,8 @@ void GuiApplication::onSceneGraphInvalidated() {
 
 
 // **************************************************************
+//Graphic handle implimentation;
+//Must call information from scenario;
 void GuiApplication::handleGLInputEvents()
 {
     while ( !_input_events.empty()) {
@@ -96,7 +98,10 @@ void GuiApplication::handleGLInputEvents()
 
         if(ke and ke->key()==Qt::Key_A){
             _scenario.toggleSelectAll();
+        }
 
+        if(ke and ke->key()==Qt::Key_C){
+            _scenario.changeColor(_scenario._selectedObjVar);
         }
 
 
@@ -145,7 +150,7 @@ void GuiApplication::handleKeyPress(QKeyEvent *e)
 
     if (e->key()==Qt::Key_Q) {_window.close(); }
     if (e->key()==Qt::Key_P) { _input_events.push(std::make_shared<QKeyEvent>(*e)); }
-    if(e->key()==Qt::Key_R){_scenario.toggleSimulation();}
+    if (e->key()==Qt::Key_R){_scenario.toggleSimulation();}
 
     if (e->key() == Qt::Key_Up){_scenario.camFlyUp();}
     if (e->key() == Qt::Key_Down){_scenario.camFlyDown();}
@@ -158,12 +163,14 @@ void GuiApplication::handleKeyPress(QKeyEvent *e)
     if(e->key()==Qt::Key_3){_scenario.switchCam(3);}
     if(e->key()==Qt::Key_4){_scenario.switchCam(4);}
 
-    if(e->key()== Qt::Key_S) {_scenario.save();}
+    if(e->key()==Qt::Key_S) {_scenario.save();}
     if(e->key()==Qt::Key_L) {_scenario.load();}
     if(e->key()==Qt::Key_A){ _input_events.push(std::make_shared<QKeyEvent>(*e));}
+    if(e->key()== Qt::Key_C){_input_events.push(std::make_shared<QKeyEvent>(*e));}
+    if(e->key()==Qt::Key_U){_scenario.unlockObjs();}
 }
 
-
+//Mouse Click Handler
 void GuiApplication::handleMouseButtonPressedEvents(QMouseEvent *m) {
 
     _startpos = _endpos;
@@ -185,6 +192,7 @@ void GuiApplication::handleMouseButtonPressedEvents(QMouseEvent *m) {
 
 }
 
+//Mouse Move Handler
 void GuiApplication::handleMouseMovementEvents(QMouseEvent *v) {
 
     if(v->type()==QEvent::MouseMove && _Mouse_pressed == true){
@@ -204,6 +212,7 @@ void GuiApplication::handleMouseMovementEvents(QMouseEvent *v) {
     }
 }
 
+//Mouse Release Handler
 void GuiApplication::handleMouseButtonReleasedEvents(QMouseEvent *m) {
     if( m->type() == QEvent::MouseButtonRelease && m->button()==Qt::LeftButton ) {
         //  qDebug() << "Left Mouse Button Unpressed";
@@ -211,6 +220,7 @@ void GuiApplication::handleMouseButtonReleasedEvents(QMouseEvent *m) {
     }
 }
 
+//MouseWheel Handler
 void GuiApplication::handleMouseWheel(QWheelEvent *w){
     int delta = w->delta();
 
