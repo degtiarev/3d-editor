@@ -63,7 +63,7 @@ public:
 
     // **************************************************************
 
-    void                                              camFly(GMlib::Vector<float,3> dS, GMlib::Angle dA, GMlib::Vector<float,3> axis);
+    void                                              camFly(char direction);
 
     void                                              camFlyUp();
     void                                              camFlyDown();
@@ -71,36 +71,25 @@ public:
     void                                              camFlyLeft();
 
     void                                              zoomCameraW(const float &zoom_var);
-    void                                              moveCamera_M(const QPoint &f, const QPoint &e);
-    void                                              switchCam(int n);
-    float                                             cameraSpeedScale();
-    void                                              panHorizontal(const int &_delta);
-    void                                              panVertical(const int &_delta);
-    void                                              NewMoveCamera(const QPoint &begin_pos, const QPoint &end_pos);
+    void                                              switchCamera(int n);
+    void                                              movePan(const int &_delta, char direction);
+    void                                              moveCamera(const QPoint &begin_pos, const QPoint &end_pos);
 
-    void                                              lockObject(const bool &lock_var);
-    GMlib::SceneObject*                               findSceneObj(QPoint &pos);
-    GMlib::Point<int, 2>                              convertToGMlibPoint(const QPoint& pos);
-    void                                              getObj(GMlib::SceneObject *selected_obj);
-    void                                              deselectObj();
-    void                                              selectGroupObj();
-    GMlib::SceneObject*                               findAllObj();
-    void                                              setSelectObj(GMlib::SceneObject *obj);
 
-    void                                              selectAllObj();
-    void                                              lockOnObj( GMlib::SceneObject* loking_obj);
-    void                                              storeObj(GMlib::SceneObject *obj);
-    void                                              selectChildrenObj(GMlib::SceneObject* object);
-    void                                              deselectAllObj();
+    GMlib::SceneObject*                               findSceneObject(QPoint &pos);
+    void                                              selectObject(GMlib::SceneObject *selected_obj);
+    void                                              deselectObject();
+
+    void                                              lockOnObject( GMlib::SceneObject* loking_obj);
+    void                                              selectChildrenObjects(GMlib::SceneObject* object);
     void                                              toggleSelectAll();
-    void                                              moveObj(QPoint &pos,QPoint &prev);
+    void                                              moveObject(QPoint &pos,QPoint &prev);
 
     void                                              rotateObj(QPoint &pos,QPoint &prev);
-    void                                              scaleObj(int &delta);
+    void                                              scaleObjects(int &delta);
 
     void                                              selectAll();
     void                                              unlockObjs();
-    void                                              insertObject();
     void                                              changeColor(GMlib::SceneObject* obj);
     GMlib::SceneObject*                               _selectedObjVar=nullptr;
     GMlib::SceneObject*                               _foundObjVar=nullptr;
@@ -108,9 +97,8 @@ public:
     void                                               save();
     void                                               load();
 
-    GMlib::Point<int, 2> fromQtToGMlibViewPoint(const GMlib::Camera& cam, const QPoint& pos);
+    GMlib::Point<int, 2> fromQtToGMlibViewPoint     ( const QPoint& pos);
 
-    void moveCamera(const QPoint& p, const QPoint& c);
     // **************************************************************
 
 

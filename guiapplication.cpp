@@ -13,7 +13,7 @@
 
 GuiApplication::GuiApplication(int& argc, char **argv) : QGuiApplication(argc, argv) {
 
-    setApplicationDisplayName( "Hello GMlib ^^," );
+    setApplicationDisplayName( "Aleksei Degtiarev" );
 
     connect(this, &QGuiApplication::lastWindowClosed,this, &QGuiApplication::quit );
     connect(this, &GuiApplication::signOnSceneGraphInitializedDone, this, &GuiApplication::afterOnSceneGraphInitialized );
@@ -31,6 +31,8 @@ GuiApplication::GuiApplication(int& argc, char **argv) : QGuiApplication(argc, a
 
     _window.setSource(QUrl("qrc:///qml/main.qml"));
     _window.show();
+
+    _window.setTitle("3D Editor");
 }
 
 GuiApplication::~GuiApplication() {
@@ -87,7 +89,7 @@ void GuiApplication::handleGLInputEvents()
         //Wheel Event
         if(we){
             int delta = we->delta();
-            _scenario.scaleObj(delta);
+            _scenario.scaleObjects(delta);
         }
 
         // Keys
@@ -108,7 +110,7 @@ void GuiApplication::handleGLInputEvents()
         //Left button
         if(me and me->buttons()==Qt::LeftButton){
             if(me->modifiers()==Qt::AltModifier){
-                _scenario.moveObj(_startpos,_endpos);
+                _scenario.moveObject(_startpos,_endpos);
             }
             if(me->modifiers()==Qt::ControlModifier){
                 _scenario.rotateObj(_startpos,_endpos);
@@ -116,7 +118,7 @@ void GuiApplication::handleGLInputEvents()
 
             if(me and me->type()==QEvent::MouseMove){
                 if(me->modifiers()==Qt::AltModifier){
-                    _scenario.moveObj(_startpos,_endpos);}
+                    _scenario.moveObject(_startpos,_endpos);}
 
                 if(me->modifiers()==Qt::ControlModifier){
                     _scenario.rotateObj(_startpos,_endpos);
@@ -127,16 +129,16 @@ void GuiApplication::handleGLInputEvents()
         //Right button
         if(me and me->buttons()== Qt::RightButton){
             if(!me->modifiers()){
-                if (_scenario.findSceneObj(_endpos)){
-                    _scenario.getObj(_scenario.findSceneObj(_endpos));}
+                if (_scenario.findSceneObject(_endpos)){
+                    _scenario.selectObject(_scenario.findSceneObject(_endpos));}
             }
             if(me->modifiers()==Qt::ShiftModifier){
-                if (_scenario.findSceneObj(_endpos)){
-                    _scenario.deselectObj();}
+                if (_scenario.findSceneObject(_endpos)){
+                    _scenario.deselectObject();}
             }
             if(me->modifiers()==Qt::ControlModifier){
-                if (_scenario.findSceneObj(_endpos)){
-                    _scenario.storeObj(_scenario.findSceneObj(_endpos));}}
+                if (_scenario.findSceneObject(_endpos)){
+                    _scenario.lockOnObject(_scenario.findSceneObject(_endpos));}}
         }
 
         _input_events.pop();
@@ -152,16 +154,16 @@ void GuiApplication::handleKeyPress(QKeyEvent *e)
     if (e->key()==Qt::Key_P) { _input_events.push(std::make_shared<QKeyEvent>(*e)); }
     if (e->key()==Qt::Key_R){_scenario.toggleSimulation();}
 
-    if (e->key() == Qt::Key_Up){_scenario.camFlyUp();}
-    if (e->key() == Qt::Key_Down){_scenario.camFlyDown();}
-    if (e->key() == Qt::Key_Right){_scenario.camFlyRight();}
-    if (e->key() == Qt::Key_Left){_scenario.camFlyLeft();}
+    if (e->key() == Qt::Key_Up){_scenario.camFly('U');}
+    if (e->key() == Qt::Key_Down){_scenario.camFly('D');}
+    if (e->key() == Qt::Key_Right){_scenario.camFly('R');}
+    if (e->key() == Qt::Key_Left){_scenario.camFly('L');}
 
 
-    if(e->key()==Qt::Key_1){_scenario.switchCam(1);}
-    if(e->key()==Qt::Key_2){_scenario.switchCam(2);}
-    if(e->key()==Qt::Key_3){_scenario.switchCam(3);}
-    if(e->key()==Qt::Key_4){_scenario.switchCam(4);}
+    if(e->key()==Qt::Key_1){_scenario.switchCamera(1);}
+    if(e->key()==Qt::Key_2){_scenario.switchCamera(2);}
+    if(e->key()==Qt::Key_3){_scenario.switchCamera(3);}
+    if(e->key()==Qt::Key_4){_scenario.switchCamera(4);}
 
     if(e->key()==Qt::Key_S) {_scenario.save();}
     if(e->key()==Qt::Key_L) {_scenario.load();}
@@ -189,7 +191,6 @@ void GuiApplication::handleMouseButtonPressedEvents(QMouseEvent *m) {
         _input_events.push(std::make_shared<QMouseEvent>(*m));
     }
 
-
 }
 
 //Mouse Move Handler
@@ -201,14 +202,12 @@ void GuiApplication::handleMouseMovementEvents(QMouseEvent *v) {
         _endpos.setX(v->pos().x());
         _endpos.setY(v->pos().y());
 
-        if(v->modifiers()==Qt::AltModifier || v->modifiers()==Qt::ShiftModifier){
+        if(v->modifiers()==Qt::AltModifier || v->modifiers()==Qt::ShiftModifier || v->modifiers()==Qt::ControlModifier ){
             _input_events.push(std::make_shared<QMouseEvent>(*v));
         }
-        if(v->modifiers()==Qt::ControlModifier){
-            _input_events.push(std::make_shared<QMouseEvent>(*v));
-        }
+
         if(!v->modifiers()){
-            _scenario.NewMoveCamera(_startpos,_endpos);}
+            _scenario.moveCamera(_startpos,_endpos);}
     }
 }
 
@@ -229,8 +228,8 @@ void GuiApplication::handleMouseWheel(QWheelEvent *w){
         if (delta>0) {_scenario.zoomCameraW(0.95);}
     }
 
-    if (w->modifiers()==Qt::ShiftModifier){ _scenario.panVertical(delta);}
-    if (w->modifiers()==Qt::ControlModifier){_scenario.panHorizontal(delta);}
+    if (w->modifiers()==Qt::ShiftModifier){ _scenario.movePan(delta,'W');}
+    if (w->modifiers()==Qt::ControlModifier){_scenario.movePan(delta,'H');}
 
     if (w->modifiers()==Qt::AltModifier){
         _input_events.push(std::make_shared<QWheelEvent>(*w));

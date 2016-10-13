@@ -123,10 +123,11 @@ void Scenario::initializeScenario() {
     _camera->setCuttingPlanes( 1.0f, 8000.0f );
     _camera->rotateGlobal( GMlib::Angle(-45), GMlib::Vector<float,3>( 1.0f, 0.0f, 0.0f ) );
     _camera->translateGlobal( GMlib::Vector<float,3>( 0.0f, -20.0f, 20.0f ) );
+    _camera->enableCulling(false);
     _scene->insertCamera( _camera.get() );
     _renderer->reshape( GMlib::Vector<int,2>(init_viewport_size, init_viewport_size) );
 
-    // Surface
+    // Surfaces
     _testtorus = std::make_shared<TestTorus>();
     _testtorus->toggleDefaultVisualizer();
     _testtorus->replot(200,200,1,1);
@@ -154,12 +155,12 @@ void Scenario::initializeScenario() {
     _scene->insert(sphere);
 
 
-    auto plane=new GMlib::PPlane<float>(GMlib::Point<float,3>(0,12,0), GMlib::Vector<float,3>( 1.0f, 1.0f, 0.0f ),
-                                        GMlib::Vector<float,3>( 0.0f, 0.0f, 1.0f ));
+    auto plane=new GMlib::PPlane<float> (GMlib::Point<float,3>(-5,0,0),
+                                         GMlib::Vector<float,3>(10,0,0), GMlib::Vector<float,3>(0,20,0));
     plane->setMaterial(GMlib::GMmaterial::Snow);
     plane->setLighted(false);
     plane->toggleDefaultVisualizer();
-    plane->replot(50,50,10,10);
+    plane->replot(50,50,1,1);
     _scene->insert(plane);
 
 }
@@ -222,20 +223,11 @@ void Scenario::replotTesttorus()
 
 // **************************************************************
 
-void Scenario::moveCamera(const QPoint& c, const QPoint& p) {
 
-    auto previous = fromQtToGMlibViewPoint(*_camera.get(), p);
-    auto current = fromQtToGMlibViewPoint(*_camera.get(), c);
-    auto tmp = previous - current;
+GMlib::Point<int, 2> Scenario::fromQtToGMlibViewPoint( const QPoint& pos) {
 
-    GMlib::Vector<float,2> d (tmp(0),-tmp(1) );
-    d = d * 0.02;
-    _camera->move(d);
-}
-// Makes a point for camera movement
-GMlib::Point<int, 2> Scenario::fromQtToGMlibViewPoint(const GMlib::Camera& cam, const QPoint& pos) {
+    int h =_camera->getViewportH();// cam.getViewportH(); // Height of the camera’s viewport
 
-    int h = cam.getViewportH(); // Height of the camera’s viewport
     // QPoint
     int q1 {pos.x()};
     int q2 {pos.y()};
@@ -246,111 +238,71 @@ GMlib::Point<int, 2> Scenario::fromQtToGMlibViewPoint(const GMlib::Camera& cam, 
     return GMlib::Point<int, 2> {p1, p2};
 }
 
-void Scenario::camFly(GMlib::Vector<float,3> dS, GMlib::Angle dA, GMlib::Vector<float,3> axis)
+
+void Scenario::camFly(char direction)
 {
+    GMlib::Vector<float,3> dS;
+
+    if (direction=='U') dS = GMlib::Vector<float,3>(0,0,0.1);
+    if (direction=='D') dS = GMlib::Vector<float,3>(0,0,-0.1);
+    if (direction=='R') dS = GMlib::Vector<float,3>(0.1,0,0);
+    if (direction=='L') dS = GMlib::Vector<float,3>(-0.1,0,0);
+
+    auto dA = GMlib::Angle(0);
+    auto axis = GMlib::Vector<float,3>(0,0,1);
     _camera->translateGlobal(dS);
     _camera->rotateGlobal(dA,axis);
 }
 
-void Scenario::camFlyUp()
-{
-    auto dS = GMlib::Vector<float,3>(0,0,0.1);
-    auto dA = GMlib::Angle(0);
-    auto axis = GMlib::Vector<float,3>(0,0,1);
-
-    camFly(dS,dA,axis);
-}
-
-void Scenario::camFlyDown()
-{
-    auto dS = GMlib::Vector<float,3>(0,0,-0.1);
-    auto dA = GMlib::Angle(0);
-    auto axis = GMlib::Vector<float,3>(0,0,1);
-
-    camFly(dS,dA,axis);
-}
-
-void Scenario::camFlyRight()
-{
-    auto dS = GMlib::Vector<float,3>(0.1,0,0);
-    auto dA = GMlib::Angle(0);
-    auto axis = GMlib::Vector<float,3>(0,0,1);
-
-    camFly(dS,dA,axis);
-}
-
-void Scenario::camFlyLeft()
-{
-    auto dS = GMlib::Vector<float,3>(-0.1,0,0);
-    auto dA = GMlib::Angle(0);
-    auto axis = GMlib::Vector<float,3>(0,0,1);
-
-    camFly(dS,dA,axis);
-}
 
 //Zoom
 void Scenario::zoomCameraW(const float &zoom_var){
     _camera->zoom(zoom_var);
 }
 
-//Camera Speed Scale
-float Scenario::cameraSpeedScale(){
-    return _scene->getSphere().getRadius();
-}
 
 //Move Camera
-void Scenario::NewMoveCamera(const QPoint &begin_pos, const QPoint &end_pos) {
+void Scenario::moveCamera(const QPoint &begin_pos, const QPoint &end_pos) {
 
-    //auto view_name = viewNameFromParams(params);
-    auto pos       = fromQtToGMlibViewPoint(*_camera.get(), begin_pos);
-    auto prev      = fromQtToGMlibViewPoint(*_camera.get(), end_pos);
+    auto pos       = fromQtToGMlibViewPoint( begin_pos);
+    auto prev      = fromQtToGMlibViewPoint( end_pos);
 
-    const float scale = cameraSpeedScale();
-    //qDebug()<<scale << _camera->getViewportH() << " " <<_camera->getViewportW();
+    const float scale = _scene->getSphere().getRadius();
+
     GMlib::Vector<float,2> delta (
                 -(pos(0) - prev(0))*scale / _camera->getViewportW(),
                 (pos(1) - prev(1))*scale / _camera->getViewportH()
                 );
 
     _camera->move( delta );
-
 }
 
-//Vertical pan
-void Scenario::panVertical(const int &_delta)
+//Move pan
+void Scenario::movePan(const int &_delta, const char direction)
 {
-    const float scale = cameraSpeedScale();
+    const float scale = _scene->getSphere().getRadius();
     auto delta = _delta/5;
-    GMlib::Vector<float,2> delta_vec(0.0f,delta * scale / _camera->getViewportW());
+    GMlib::Vector<float,2> delta_vec;
+
+    if (direction=='W')
+        delta_vec = GMlib::Vector<float,2>(0.0f, delta * scale / _camera->getViewportW());
+    else delta_vec = GMlib::Vector<float,2>(delta * scale / _camera->getViewportH(),0.0f);
+
     _camera->move(delta_vec);
 }
 
-//Horizontal pan
-void Scenario::panHorizontal(const int &_delta)
-{
-    const float scale = cameraSpeedScale();
-    auto delta = _delta/5;
-    GMlib::Vector<float,2> delta_vec(delta * scale / _camera->getViewportH(),0.0f);
-    _camera->move(delta_vec);
-}
-
-GMlib::Point<int, 2> Scenario::convertToGMlibPoint(const QPoint &pos)
-{
-    return GMlib::Vector<int,2>(int(pos.x()),int(pos.y()-1));
-}
-
-GMlib::SceneObject* Scenario::findSceneObj(QPoint &pos)
+GMlib::SceneObject* Scenario::findSceneObject(QPoint &pos)
 {
     GMlib::SceneObject *selected_obj = nullptr;
 
     _select_renderer->setCamera(_camera.get());
     const GMlib::Vector<int,2> size(_camera->getViewportW(),
                                     _camera->getViewportH());
-    //_select_renderer->reshape(size);
+
     _select_renderer->reshape(size);
     _select_renderer->prepare();
     //select code
-    GMlib::Point <int,2> qp = fromQtToGMlibViewPoint(*_camera.get(),pos);
+    GMlib::Point <int,2> qp = fromQtToGMlibViewPoint(pos);
 
     _select_renderer->select(GMlib::GM_SO_TYPE_SELECTOR);
 
@@ -360,7 +312,9 @@ GMlib::SceneObject* Scenario::findSceneObj(QPoint &pos)
         _select_renderer->select(-GMlib::GM_SO_TYPE_SELECTOR );
         selected_obj = _select_renderer->findObject(qp(0),qp(1));
     }
-    if(selected_obj){qDebug()<<"True";};
+    //    if(selected_obj){
+    //        qDebug()<<"True";};
+
     _select_renderer->releaseCamera();
 
     return selected_obj;
@@ -368,7 +322,7 @@ GMlib::SceneObject* Scenario::findSceneObj(QPoint &pos)
 }
 
 //Select object
-void Scenario::getObj(GMlib::SceneObject *selected_obj){
+void Scenario::selectObject(GMlib::SceneObject *selected_obj){
 
     if( !selected_obj ) return;
 
@@ -378,24 +332,24 @@ void Scenario::getObj(GMlib::SceneObject *selected_obj){
     selected_obj->setSelected( !selected );
 
     _selectedObjVar = selected_obj;
-    qDebug()<<selected_obj->getPos()(0) << selected_obj->getPos()(1);
+
+    // qDebug()<<selected_obj->getPos()(0) << selected_obj->getPos()(1);
 }
 
-void Scenario::deselectObj()
+void Scenario::deselectObject()
 {
     if (_selectedObjVar and _selectedObjVar->isSelected()){
         _selectedObjVar->setSelected(false);}
 
 }
 
-void Scenario::lockOnObj(GMlib::SceneObject *loking_obj)
+void Scenario::lockOnObject(GMlib::SceneObject *loking_obj)
 {
     if(!loking_obj->isLocked()){_camera->lock(loking_obj);}
 }
 
 //unlock camera, return camera position to default
-void
-Scenario::unlockObjs()
+void Scenario::unlockObjs()
 {    auto init_cam_pos       = GMlib::Point<float,3>(  0.0f, 0.0f, 0.0f );
      auto init_cam_dir       = GMlib::Vector<float,3>( 0.0f, 1.0f, 0.0f );
       auto init_cam_up        = GMlib::Vector<float,3>(  0.0f, 0.0f, 1.0f );
@@ -408,12 +362,8 @@ Scenario::unlockObjs()
        }
 }
 
-void Scenario::storeObj(GMlib::SceneObject *obj)
-{
-    lockOnObj(obj);
-}
 
-void Scenario::scaleObj(int &delta)
+void Scenario::scaleObjects(int &delta)
 {
     const GMlib::Array<GMlib::SceneObject*> &sel_objs = _scene->getSelectedObjects();
     const float plus_val=1.02;
@@ -429,8 +379,8 @@ void Scenario::scaleObj(int &delta)
 
 void Scenario::rotateObj(QPoint &pos, QPoint &prev)
 {
-    auto r_pos = fromQtToGMlibViewPoint(*_camera.get(),pos);
-    auto r_prev = fromQtToGMlibViewPoint(*_camera.get(),prev);
+    auto r_pos = fromQtToGMlibViewPoint(pos);
+    auto r_prev = fromQtToGMlibViewPoint(prev);
 
     auto rot_X_pos_dif = float(r_pos(0)-r_prev(0));
     auto rot_Y_pos_dif = float(r_pos(1)-r_prev(1));
@@ -447,7 +397,7 @@ void Scenario::rotateObj(QPoint &pos, QPoint &prev)
         _selectedObjVar->rotateGlobal(ang,rot);
 }
 
-void Scenario::switchCam(int n)
+void Scenario::switchCamera(int n)
 {
     //auto init_viewport_size = 600;
     auto init_cam_pos       = GMlib::Point<float,3>(  0.0f, 0.0f, 0.0f );
@@ -485,7 +435,7 @@ void Scenario::switchCam(int n)
 
 }
 
-void Scenario::selectChildrenObj(GMlib::SceneObject *object)
+void Scenario::selectChildrenObjects(GMlib::SceneObject *object)
 {
     GMlib::Camera *cam   = dynamic_cast<GMlib::Camera*>( object );
     GMlib::Light  *light = dynamic_cast<GMlib::Light*>( object );
@@ -494,26 +444,12 @@ void Scenario::selectChildrenObj(GMlib::SceneObject *object)
 
         for( int i = 0; i < object->getChildren().getSize(); i++ )
         {
-            selectChildrenObj((object->getChildren())[i] );
+            selectChildrenObjects((object->getChildren())[i] );
         }
     }
 }
 
-void Scenario::deselectAllObj()
-{_scene->removeSelections();}
 
-void Scenario::selectAllObj()
-{
-    _scene->removeSelections();
-
-    GMlib::Scene *scene = _scene.get();
-    for( int i = 0; i < scene->getSize(); ++i )
-    {
-        selectChildrenObj((*scene)[i] );
-    }
-
-    qDebug()<<"Selected object after selection"<< _scene->getSelectedObjects().getSize();
-}
 
 void Scenario::toggleSelectAll()
 {
@@ -521,20 +457,26 @@ void Scenario::toggleSelectAll()
 
     if( _scene->getSelectedObjects().getSize() > 0 )
     {
-        deselectAllObj();
+        _scene->removeSelections();
     }
     else
     {
-        selectAllObj();
+        _scene->removeSelections();
+
+        GMlib::Scene *scene = _scene.get();
+        for( int i = 0; i < scene->getSize(); ++i )
+        {
+            selectChildrenObjects((*scene)[i] );
+        }
     }
 }
 
-void Scenario::moveObj(QPoint &pos, QPoint &prev)
+void Scenario::moveObject(QPoint &pos, QPoint &prev)
 {
-    auto _pos = fromQtToGMlibViewPoint(*_camera.get(),pos);
-    auto _prev = fromQtToGMlibViewPoint(*_camera.get(),prev);
+    auto _pos = fromQtToGMlibViewPoint(pos);
+    auto _prev = fromQtToGMlibViewPoint(prev);
 
-    const float scale = cameraSpeedScale();
+    const float scale = _scene->getSphere().getRadius();
     auto tmp1 = -(_pos(0) - _prev(0))*scale / _camera->getViewportW();
     auto tmp2 = -(_pos(1) - _prev(1))*scale / _camera->getViewportH();
     GMlib::Vector<float,3> delta (tmp1,tmp2,0);
@@ -544,10 +486,8 @@ void Scenario::moveObj(QPoint &pos, QPoint &prev)
 
         GMlib::SceneObject* obj = sel_objs(i);
 
-        qDebug()<<delta(0) << delta(1);
+        // qDebug()<<delta(0) << delta(1);
         obj->translateGlobal(delta,true);
-
-
     }
 
 }
@@ -555,7 +495,6 @@ void Scenario::moveObj(QPoint &pos, QPoint &prev)
 //change Color
 void Scenario::changeColor(GMlib::SceneObject* obj)
 {
-    //const GMlib::Array<GMlib::SceneObject*> &sel_objs = _scene->getSelectedObjects();
     std::vector<GMlib::Material> colors=
     {GMlib::GMmaterial::BlackPlastic,GMlib::GMmaterial::BlackRubber,
      GMlib::GMmaterial::Brass,GMlib::GMmaterial::Bronze,
@@ -566,19 +505,27 @@ void Scenario::changeColor(GMlib::SceneObject* obj)
      GMlib::GMmaterial::Plastic,GMlib::GMmaterial::PolishedBronze,
      GMlib::GMmaterial::PolishedCopper,GMlib::GMmaterial::PolishedGold,
      GMlib::GMmaterial::PolishedGreen,GMlib::GMmaterial::PolishedRed,
-     GMlib::GMmaterial::PolishedSilver};
+     GMlib::GMmaterial::PolishedSilver, GMlib::GMmaterial::Ruby,
+     GMlib::GMmaterial::Sapphire, GMlib::GMmaterial::Silver,
+     GMlib::GMmaterial::Snow, GMlib::GMmaterial::Turquoise};
+
 
     const auto cj = obj->getMaterial();
-    int color_num=0;
-    for(unsigned int i=0;i<colors.size();++i){
+    unsigned int color_num=0;
+    for (unsigned int i=0;i<colors.size(); i++){
         if (cj == colors[i]){color_num = i;
             break;}
     }
+
     color_num++;
-    if(color_num<20){
-        obj->setMaterial(colors[color_num]);}
+    if(color_num<colors.size()-1){
+        obj->setMaterial(colors[color_num]);
+        qDebug()<<color_num;}
+
     else obj->setMaterial(colors[0]);
 }
+
+#define Saving {
 
 void Scenario::save() {
 
@@ -804,6 +751,10 @@ void Scenario::savePP(std::ofstream &os, const GMlib::PPlane<float> *obj) {
     os << "}" <<endl<<endl;
 }
 
+#define FOLDINGEND }
+
+#define Loading {
+
 void Scenario::load() {
 
     qDebug() << "Open scene...";
@@ -865,6 +816,8 @@ void Scenario::load() {
     //Load GMlib::SceneObjects into the scene.
 
 }
+
+#define FOLDINGEND }
 
 // **************************************************************
 

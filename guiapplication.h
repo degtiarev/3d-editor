@@ -29,9 +29,9 @@ private:
 
     // **************************************************************
     bool                                        _Mouse_pressed;
-    bool _leftMousePressed;
-    QPoint _startpos;
-    QPoint _endpos;
+    bool                                        _leftMousePressed;
+    QPoint                                      _startpos;
+    QPoint                                      _endpos;
     // **************************************************************
 
 
@@ -48,10 +48,10 @@ private slots:
 
 
     // **************************************************************
-    void  handleMouseButtonPressedEvents(QMouseEvent*);
-    void  handleMouseMovementEvents(QMouseEvent*);
-    void  handleMouseButtonReleasedEvents(QMouseEvent*);
-    void  handleMouseWheel(QWheelEvent*);
+    void                                         handleMouseButtonPressedEvents(QMouseEvent*);
+    void                                         handleMouseMovementEvents(QMouseEvent*);
+    void                                         handleMouseButtonReleasedEvents(QMouseEvent*);
+    void                                         handleMouseWheel(QWheelEvent*);
     // **************************************************************
 
 

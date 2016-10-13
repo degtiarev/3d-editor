@@ -27,7 +27,6 @@ Window::Window(QWindow *parent) : QQuickView(parent) {
     format.setSwapBehavior(QSurfaceFormat::DoubleBuffer);
     format.setSwapInterval(1);                                // 0 = vsync off
   }
-
   format.setDepthBufferSize(24);
   format.setRedBufferSize(8);
   format.setGreenBufferSize(8);
