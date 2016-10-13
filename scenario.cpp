@@ -229,13 +229,13 @@ GMlib::Point<int, 2> Scenario::fromQtToGMlibViewPoint( const QPoint& pos) {
     int h =_camera->getViewportH();// cam.getViewportH(); // Height of the camera’s viewport
 
     // QPoint
-    int q1 {pos.x()};
-    int q2 {pos.y()};
+    int q1 = pos.x();
+    int q2 = pos.y();
     // GMlib Point
     int p1 = q1;
     int p2 = h - q2 - 1;
 
-    return GMlib::Point<int, 2> {p1, p2};
+    return GMlib::Point<int, 2> (p1, p2);
 }
 
 
@@ -264,14 +264,14 @@ void Scenario::zoomCameraW(const float &zoom_var){
 //Move Camera
 void Scenario::moveCamera(const QPoint &begin_pos, const QPoint &end_pos) {
 
-    auto pos       = fromQtToGMlibViewPoint( begin_pos);
-    auto prev      = fromQtToGMlibViewPoint( end_pos);
+    auto curentPos       = fromQtToGMlibViewPoint( begin_pos);
+    auto previousPos     = fromQtToGMlibViewPoint( end_pos);
 
     const float scale = _scene->getSphere().getRadius();
 
     GMlib::Vector<float,2> delta (
-                -(pos(0) - prev(0))*scale / _camera->getViewportW(),
-                (pos(1) - prev(1))*scale / _camera->getViewportH()
+                -(curentPos(0) - previousPos(0))*scale / _camera->getViewportW(),
+                (curentPos(1) - previousPos(1))*scale / _camera->getViewportH()
                 );
 
     _camera->move( delta );
@@ -312,18 +312,16 @@ GMlib::SceneObject* Scenario::findSceneObject(QPoint &pos)
         _select_renderer->select(-GMlib::GM_SO_TYPE_SELECTOR );
         selected_obj = _select_renderer->findObject(qp(0),qp(1));
     }
-    //    if(selected_obj){
-    //        qDebug()<<"True";};
 
     _select_renderer->releaseCamera();
 
     return selected_obj;
-
 }
 
 //Select object
-void Scenario::selectObject(GMlib::SceneObject *selected_obj){
+void Scenario::tryToSelectObject(QPoint &pos){
 
+    GMlib::SceneObject *selected_obj = findSceneObject (pos);
     if( !selected_obj ) return;
 
     auto selected = selected_obj->isSelected(); //bool
@@ -336,17 +334,22 @@ void Scenario::selectObject(GMlib::SceneObject *selected_obj){
     // qDebug()<<selected_obj->getPos()(0) << selected_obj->getPos()(1);
 }
 
-void Scenario::deselectObject()
+void Scenario::tryToDeselectObject(QPoint &pos)
 {
-    if (_selectedObjVar and _selectedObjVar->isSelected()){
+    GMlib::SceneObject *selected_obj = findSceneObject (pos);
+
+    if (selected_obj && selected_obj->isSelected()){
         _selectedObjVar->setSelected(false);}
-
 }
 
-void Scenario::lockOnObject(GMlib::SceneObject *loking_obj)
+
+void Scenario::tryToLockOnObject(QPoint &pos)
 {
-    if(!loking_obj->isLocked()){_camera->lock(loking_obj);}
+    GMlib::SceneObject *selected_obj = findSceneObject (pos);
+    if(!selected_obj->isLocked()){_camera->lock(selected_obj);}
 }
+
+
 
 //unlock camera, return camera position to default
 void Scenario::unlockObjs()

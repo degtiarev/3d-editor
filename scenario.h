@@ -65,22 +65,17 @@ public:
 
     void                                              camFly(char direction);
 
-    void                                              camFlyUp();
-    void                                              camFlyDown();
-    void                                              camFlyRight();
-    void                                              camFlyLeft();
-
     void                                              zoomCameraW(const float &zoom_var);
     void                                              switchCamera(int n);
     void                                              movePan(const int &_delta, char direction);
     void                                              moveCamera(const QPoint &begin_pos, const QPoint &end_pos);
 
-
     GMlib::SceneObject*                               findSceneObject(QPoint &pos);
-    void                                              selectObject(GMlib::SceneObject *selected_obj);
-    void                                              deselectObject();
+    void                                              tryToSelectObject(QPoint &pos);
+    void                                              tryToDeselectObject(QPoint &pos);
+    void                                              tryToLockOnObject(QPoint &pos);
 
-    void                                              lockOnObject( GMlib::SceneObject* loking_obj);
+
     void                                              selectChildrenObjects(GMlib::SceneObject* object);
     void                                              toggleSelectAll();
     void                                              moveObject(QPoint &pos,QPoint &prev);

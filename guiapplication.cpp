@@ -94,7 +94,6 @@ void GuiApplication::handleGLInputEvents()
 
         // Keys
         if (ke and ke->key()==Qt::Key_P){
-            qDebug()<<"Handling the P button";
             _scenario.replotTesttorus();
         }
 
@@ -110,11 +109,10 @@ void GuiApplication::handleGLInputEvents()
         //Left button
         if(me and me->buttons()==Qt::LeftButton){
             if(me->modifiers()==Qt::AltModifier){
-                _scenario.moveObject(_startpos,_endpos);
-            }
+                _scenario.moveObject(_startpos,_endpos);}
+
             if(me->modifiers()==Qt::ControlModifier){
-                _scenario.rotateObj(_startpos,_endpos);
-            }
+                _scenario.rotateObj(_startpos,_endpos);}
 
             if(me and me->type()==QEvent::MouseMove){
                 if(me->modifiers()==Qt::AltModifier){
@@ -128,17 +126,14 @@ void GuiApplication::handleGLInputEvents()
 
         //Right button
         if(me and me->buttons()== Qt::RightButton){
-            if(!me->modifiers()){
-                if (_scenario.findSceneObject(_endpos)){
-                    _scenario.selectObject(_scenario.findSceneObject(_endpos));}
-            }
+            if(!me->modifiers()) {
+                _scenario.tryToSelectObject(_endpos);}
+
             if(me->modifiers()==Qt::ShiftModifier){
-                if (_scenario.findSceneObject(_endpos)){
-                    _scenario.deselectObject();}
-            }
+                _scenario.tryToDeselectObject(_endpos);}
+
             if(me->modifiers()==Qt::ControlModifier){
-                if (_scenario.findSceneObject(_endpos)){
-                    _scenario.lockOnObject(_scenario.findSceneObject(_endpos));}}
+                _scenario.tryToLockOnObject(_endpos);}
         }
 
         _input_events.pop();
