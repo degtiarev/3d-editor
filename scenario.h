@@ -48,6 +48,7 @@ public:
     explicit Scenario();
     virtual ~Scenario();
 
+    static Scenario&                                  instance();
     void                                              initialize();
     void                                              deinitialize();
     virtual void                                      initializeScenario();
@@ -64,7 +65,6 @@ public:
     // **************************************************************
 
     void                                              camFly(char direction);
-
     void                                              zoomCameraW(const float &zoom_var);
     void                                              switchCamera(int n);
     void                                              movePan(const int &_delta, char direction);
@@ -74,25 +74,21 @@ public:
     void                                              tryToSelectObject(QPoint &pos);
     void                                              tryToDeselectObject(QPoint &pos);
     void                                              tryToLockOnObject(QPoint &pos);
-
-
-    void                                              selectChildrenObjects(GMlib::SceneObject* object);
-    void                                              toggleSelectAll();
     void                                              moveObject(QPoint &pos,QPoint &prev);
-
     void                                              rotateObj(QPoint &pos,QPoint &prev);
     void                                              scaleObjects(int &delta);
-
     void                                              selectAll();
     void                                              unlockObjs();
+    void                                              selectChildrenObjects(GMlib::SceneObject* object);
+    void                                              toggleSelectAll();
     void                                              changeColor(GMlib::SceneObject* obj);
-    GMlib::SceneObject*                               _selectedObjVar=nullptr;
-    GMlib::SceneObject*                               _foundObjVar=nullptr;
 
     void                                               save();
     void                                               load();
 
-    GMlib::Point<int, 2> fromQtToGMlibViewPoint     ( const QPoint& pos);
+    GMlib::SceneObject*                               _selectedObjVar=nullptr;
+
+    GMlib::Point<int, 2> convertQtPointToGMlibViewPoint( const QPoint& pos);
 
     // **************************************************************
 
@@ -104,9 +100,6 @@ private:
     std::shared_ptr<GMlib::Scene>                     _scene;
     int                                               _timer_id;
 
-
-    bool                                              ifSelectedVar;
-
     //select_renderer
     std::shared_ptr<GMlib::DefaultSelectRenderer>     _select_renderer {nullptr};
 
@@ -117,20 +110,15 @@ private:
     std::shared_ptr<GMlib::PointLight>                _light;
     std::shared_ptr<TestTorus>                        _testtorus;
 
-
-
-private:
     static std::unique_ptr<Scenario>                  _instance;
 
-    void         save( std::ofstream& os, const GMlib::SceneObject* obj);
-    void         saveSO( std::ofstream& os, const GMlib::SceneObject* obj);
-    void         savePT( std::ofstream& os, const GMlib::PTorus<float>* obj);
-    void         savePS(std::ofstream &os, const GMlib::PSphere<float> *obj);
-    void         savePC(std::ofstream &os, const GMlib::PCylinder<float> *obj);
-    void         savePP(std::ofstream &os, const GMlib::PPlane<float> *obj);
+    void                                              save( std::ofstream& os, const GMlib::SceneObject* obj);
+    void                                              saveSO( std::ofstream& os, const GMlib::SceneObject* obj);
+    void                                              savePT( std::ofstream& os, const GMlib::PTorus<float>* obj);
+    void                                              savePS(std::ofstream &os, const GMlib::PSphere<float> *obj);
+    void                                              savePC(std::ofstream &os, const GMlib::PCylinder<float> *obj);
+    void                                              savePP(std::ofstream &os, const GMlib::PPlane<float> *obj);
 
-public:
-    static Scenario&                                  instance();
 };
 
 #endif

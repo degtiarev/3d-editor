@@ -224,7 +224,7 @@ void Scenario::replotTesttorus()
 // **************************************************************
 
 
-GMlib::Point<int, 2> Scenario::fromQtToGMlibViewPoint( const QPoint& pos) {
+GMlib::Point<int, 2> Scenario::convertQtPointToGMlibViewPoint( const QPoint& pos) {
 
     int h =_camera->getViewportH();// cam.getViewportH(); // Height of the camera’s viewport
 
@@ -264,8 +264,8 @@ void Scenario::zoomCameraW(const float &zoom_var){
 //Move Camera
 void Scenario::moveCamera(const QPoint &begin_pos, const QPoint &end_pos) {
 
-    auto curentPos       = fromQtToGMlibViewPoint( begin_pos);
-    auto previousPos     = fromQtToGMlibViewPoint( end_pos);
+    auto curentPos       = convertQtPointToGMlibViewPoint( begin_pos);
+    auto previousPos     = convertQtPointToGMlibViewPoint( end_pos);
 
     const float scale = _scene->getSphere().getRadius();
 
@@ -302,7 +302,7 @@ GMlib::SceneObject* Scenario::findSceneObject(QPoint &pos)
     _select_renderer->reshape(size);
     _select_renderer->prepare();
     //select code
-    GMlib::Point <int,2> qp = fromQtToGMlibViewPoint(pos);
+    GMlib::Point <int,2> qp = convertQtPointToGMlibViewPoint(pos);
 
     _select_renderer->select(GMlib::GM_SO_TYPE_SELECTOR);
 
@@ -355,7 +355,7 @@ void Scenario::tryToLockOnObject(QPoint &pos)
 void Scenario::unlockObjs()
 {    auto init_cam_pos       = GMlib::Point<float,3>(  0.0f, 0.0f, 0.0f );
      auto init_cam_dir       = GMlib::Vector<float,3>( 0.0f, 1.0f, 0.0f );
-      auto init_cam_up        = GMlib::Vector<float,3>(  0.0f, 0.0f, 1.0f );
+     auto init_cam_up        = GMlib::Vector<float,3>(  0.0f, 0.0f, 1.0f );
 
        if(_camera->isLocked()){
            _camera->unLock();
@@ -382,8 +382,8 @@ void Scenario::scaleObjects(int &delta)
 
 void Scenario::rotateObj(QPoint &pos, QPoint &prev)
 {
-    auto r_pos = fromQtToGMlibViewPoint(pos);
-    auto r_prev = fromQtToGMlibViewPoint(prev);
+    auto r_pos = convertQtPointToGMlibViewPoint(pos);
+    auto r_prev = convertQtPointToGMlibViewPoint(prev);
 
     auto rot_X_pos_dif = float(r_pos(0)-r_prev(0));
     auto rot_Y_pos_dif = float(r_pos(1)-r_prev(1));
@@ -406,36 +406,31 @@ void Scenario::switchCamera(int n)
     auto init_cam_pos       = GMlib::Point<float,3>(  0.0f, 0.0f, 0.0f );
     auto init_cam_dir       = GMlib::Vector<float,3>( 0.0f, 1.0f, 0.0f );
     auto init_cam_up        = GMlib::Vector<float,3>(  0.0f, 0.0f, 1.0f );
+
+    _camera->set(init_cam_pos,init_cam_dir,init_cam_up);
     switch (n)
     {
     case 1:
-        _camera->set(init_cam_pos,init_cam_dir,init_cam_up);
         _camera->rotateGlobal( GMlib::Angle(-45), GMlib::Vector<float,3>( 1.0f, 0.0f, 0.0f ) );
         _camera->translateGlobal( GMlib::Vector<float,3>( 0.0f, -20.0f, 20.0f ) );
         qDebug() << "Projection cam";
         break;
     case 2:
-        _camera->set(init_cam_pos,init_cam_dir,init_cam_up);
         _camera->rotateGlobal( GMlib::Angle(0), GMlib::Vector<float,3>( 1.0f, 0.0f, 0.0f ) );
         _camera->translateGlobal( GMlib::Vector<float,3>( 0.0f, -20.0f, 0.0f ) );
         qDebug() << "Front cam";
         break;
     case 3:
-        _camera->set(init_cam_pos,init_cam_dir,init_cam_up);
         _camera->rotateGlobal( GMlib::Angle(90), GMlib::Vector<float,3>( 1.0f, 0.0f, 0.0f ) );
         _camera->translateGlobal( GMlib::Vector<float,3>( 0.0f, -20.0f, 0.0f ) );
         qDebug() << "Side cam";
         break;
     case 4:
-        _camera->set(init_cam_pos,init_cam_dir,init_cam_up);
         _camera->rotateGlobal( GMlib::Angle(-90), GMlib::Vector<float,3>( 1.0f, 0.0f, 0.0f ) );
         _camera->translateGlobal( GMlib::Vector<float,3>( 0.0f, 0.0f, 20.0f ) );
         qDebug() << "Top cam";
         break;
     }
-    // _renderer->render();
-
-
 }
 
 void Scenario::selectChildrenObjects(GMlib::SceneObject *object)
@@ -476,8 +471,8 @@ void Scenario::toggleSelectAll()
 
 void Scenario::moveObject(QPoint &pos, QPoint &prev)
 {
-    auto _pos = fromQtToGMlibViewPoint(pos);
-    auto _prev = fromQtToGMlibViewPoint(prev);
+    auto _pos = convertQtPointToGMlibViewPoint(pos);
+    auto _prev = convertQtPointToGMlibViewPoint(prev);
 
     const float scale = _scene->getSphere().getRadius();
     auto tmp1 = -(_pos(0) - _prev(0))*scale / _camera->getViewportW();
@@ -489,7 +484,6 @@ void Scenario::moveObject(QPoint &pos, QPoint &prev)
 
         GMlib::SceneObject* obj = sel_objs(i);
 
-        // qDebug()<<delta(0) << delta(1);
         obj->translateGlobal(delta,true);
     }
 
@@ -522,8 +516,7 @@ void Scenario::changeColor(GMlib::SceneObject* obj)
 
     color_num++;
     if(color_num<colors.size()-1){
-        obj->setMaterial(colors[color_num]);
-        qDebug()<<color_num;}
+        obj->setMaterial(colors[color_num]);}
 
     else obj->setMaterial(colors[0]);
 }
