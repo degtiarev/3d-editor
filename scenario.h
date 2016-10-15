@@ -71,8 +71,7 @@ public:
     void                                              moveCamera(const QPoint &begin_pos, const QPoint &end_pos);
 
     GMlib::SceneObject*                               findSceneObject(QPoint &pos);
-    void                                              tryToSelectObject(QPoint &pos);
-    void                                              tryToDeselectObject(QPoint &pos);
+    void                                              tryToSelectObject(QPoint &pos, char amount);
     void                                              tryToLockOnObject(QPoint &pos);
     void                                              moveObject(QPoint &pos,QPoint &prev);
     void                                              rotateObj(QPoint &pos,QPoint &prev);
@@ -81,12 +80,13 @@ public:
     void                                              unlockObjs();
     void                                              selectChildrenObjects(GMlib::SceneObject* object);
     void                                              toggleSelectAll();
-    void                                              changeColor(GMlib::SceneObject* obj);
+    void                                              changeColor();
+    void                                              insertObject(const QPoint& pos, char object);
+    void                                              deleteObject();
+
 
     void                                               save();
     void                                               load();
-
-    GMlib::SceneObject*                               _selectedObjVar=nullptr;
 
     GMlib::Point<int, 2> convertQtPointToGMlibViewPoint( const QPoint& pos);
 
@@ -112,12 +112,17 @@ private:
 
     static std::unique_ptr<Scenario>                  _instance;
 
+
+    // **************************************************************
+
     void                                              save( std::ofstream& os, const GMlib::SceneObject* obj);
     void                                              saveSO( std::ofstream& os, const GMlib::SceneObject* obj);
     void                                              savePT( std::ofstream& os, const GMlib::PTorus<float>* obj);
     void                                              savePS(std::ofstream &os, const GMlib::PSphere<float> *obj);
     void                                              savePC(std::ofstream &os, const GMlib::PCylinder<float> *obj);
     void                                              savePP(std::ofstream &os, const GMlib::PPlane<float> *obj);
+
+    // **************************************************************
 
 };
 
