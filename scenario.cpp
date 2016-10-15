@@ -137,6 +137,7 @@ void Scenario::initializeScenario() {
     _testtorus->test01();
 
 
+    //std::shared_ptr<GMlib::PCylinder<float>> cylinder= std::make_shared<GMlib::PCylinder<float>>(2,2,15) ;
     auto cylinder=new GMlib::PCylinder<float>(2,2,15);
     cylinder->toggleDefaultVisualizer();
     cylinder->replot(100,100,20,20);
@@ -215,11 +216,6 @@ void Scenario::timerEvent(QTimerEvent* e) {
 }
 
 void Scenario::toggleSimulation() { _scene->toggleRun(); }
-
-void Scenario::replotTesttorus()
-{
-    _testtorus->replot(4,4,1,1);\
-}
 
 // **************************************************************
 
@@ -380,25 +376,31 @@ void Scenario::scaleObjects(int &delta)
 
 void Scenario::rotateObj(QPoint &pos, QPoint &prev)
 {
+    double error = 1e-6;
+
     auto r_pos = convertQtPointToGMlibViewPoint(pos);
     auto r_prev = convertQtPointToGMlibViewPoint(prev);
 
-    auto rot_X_pos_dif = float(r_pos(0)-r_prev(0));
-    auto rot_Y_pos_dif = float(r_pos(1)-r_prev(1));
-
-    GMlib::Vector<float,3> rotDir (rot_X_pos_dif,rot_Y_pos_dif,0.0f);
-    rotDir = rotDir * 0.001;
-
-    GMlib::Angle angle(M_2PI * sqrt(
-                           pow( double( rot_X_pos_dif) / _camera->getViewportW(), 2 ) +
-                           pow( double( rot_Y_pos_dif) / _camera->getViewportH(), 2 ) )
-                       );
-
-    const GMlib::Array<GMlib::SceneObject*> &selected_objects = _scene->getSelectedObjects();
-    for( int i = 0; i < selected_objects.getSize(); i++ )
+    if( std::abs(r_pos(0)-r_prev(0)) > error || std::abs(r_pos(1)-r_prev(1)) > error)
     {
-        GMlib::SceneObject* obj = selected_objects(i);
-        obj->rotateGlobal(angle,rotDir);
+        auto rot_X_pos_dif = float(r_pos(0)-r_prev(0));
+        auto rot_Y_pos_dif = float(r_pos(1)-r_prev(1));
+
+        GMlib::Vector<float,3> rotDir (rot_X_pos_dif,rot_Y_pos_dif,0.0f);
+        rotDir = rotDir * 0.001;
+
+        GMlib::Angle angle(M_2PI * sqrt(
+                               pow( double( rot_X_pos_dif) / _camera->getViewportW(), 2 ) +
+                               pow( double( rot_Y_pos_dif) / _camera->getViewportH(), 2 ) )
+                           );
+
+        const GMlib::Array<GMlib::SceneObject*> &selected_objects = _scene->getSelectedObjects();
+        for( int i = 0; i < selected_objects.getSize(); i++ )
+        {
+            GMlib::SceneObject* obj = selected_objects(i);
+            obj->rotateGlobal(angle,rotDir);
+        }
+
     }
 
 }
@@ -544,7 +546,7 @@ void Scenario::insertObject(const QPoint& pos, char object)
         const float scale =_scene->getSphere().getRadius();
         int diff = 12;
         GMlib::Point<float,2> newPoint ( (gmPos(0))*scale / _camera->getViewportW() - diff,
-                                        (gmPos(1))*scale / _camera->getViewportH() - diff);
+                                         (gmPos(1))*scale / _camera->getViewportH() - diff);
         qDebug() << "Calculation:";
         qDebug() << "fromQTtoGMLIB" << gmPos(0) << gmPos(1);
         qDebug() << "Qpoint pos: " << pos.x() << " " << pos.y();
@@ -588,7 +590,6 @@ void Scenario::save() {
             return;
         }
 
-
         os << "GMlibVersion { int { 0x"
            << std::setw(6) << std::setfill('0')
            << std::hex << GM_VERSION
@@ -604,9 +605,9 @@ void Scenario::save() {
 
         }
 
+    }
 
-
-    } startSimulation();
+    startSimulation();
     qDebug() << "The scene was success saved";
 
 }
@@ -798,6 +799,82 @@ void Scenario::savePP(std::ofstream &os, const GMlib::PPlane<float> *obj) {
 }
 
 #define FOLDINGEND }
+
+void Scenario::replotLow()
+{
+    const GMlib::Array<GMlib::SceneObject*> &selected_objects = _scene->getSelectedObjects();
+
+    for( int i = 0; i < selected_objects.getSize(); i++ )
+    {
+        GMlib::SceneObject* obj = selected_objects(i);
+        std::string str = obj->getIdentity();
+        //const char * c = str.c_str();
+
+        if (str == "PTorus")
+        {
+            //qDebug() << c;
+            GMlib::PTorus<float> *objtorus = dynamic_cast<GMlib::PTorus<float>*>(obj);
+            objtorus->replot(4, 4, 1, 1);
+        }
+        else if (str == "PSphere")
+        {
+            //qDebug() << c;
+            GMlib::PSphere<float> *objsphere = dynamic_cast<GMlib::PSphere<float>*>(obj);
+            objsphere->replot(7, 7, 1, 1);
+        }
+        else if (str == "PPlane")
+        {
+            //qDebug() << c;
+            GMlib::PPlane<float> *objplane = dynamic_cast<GMlib::PPlane<float>*>(obj);
+            objplane->replot(1, 1, 1, 1);
+        }
+        else if (str == "PCylinder")
+        {
+            //qDebug() << c;
+            GMlib::PCylinder<float> *objcylinder = dynamic_cast<GMlib::PCylinder<float>*>(obj);
+            objcylinder->replot(5, 5, 1, 1);
+        }
+    }
+
+}
+
+void Scenario::replotHigh()
+{
+    const GMlib::Array<GMlib::SceneObject*> &selected_objects = _scene->getSelectedObjects();
+
+    for( int i = 0; i < selected_objects.getSize(); i++ )
+    {
+        GMlib::SceneObject* obj = selected_objects(i);
+        std::string str = obj->getIdentity();
+        //const char * c = str.c_str();
+
+        if (str == "PTorus")
+        {
+            //qDebug() << c;
+            GMlib::PTorus<float> *objtorus = dynamic_cast<GMlib::PTorus<float>*>(obj);
+            objtorus->replot(200, 200, 1, 1);
+        }
+        else if (str == "PSphere")
+        {
+            //qDebug() << c;
+            GMlib::PSphere<float> *objsphere = dynamic_cast<GMlib::PSphere<float>*>(obj);
+            objsphere->replot(200, 200, 1, 1);
+        }
+        else if (str == "PPlane")
+        {
+            //qDebug() << c;
+            GMlib::PPlane<float> *objplane = dynamic_cast<GMlib::PPlane<float>*>(obj);
+            objplane->replot(10, 10, 1, 1);
+        }
+        else if (str == "PCylinder")
+        {
+            //qDebug() << c;
+            GMlib::PCylinder<float> *objcylinder = dynamic_cast<GMlib::PCylinder<float>*>(obj);
+            objcylinder->replot(200, 200, 1, 1);
+        }
+    }
+
+}
 
 void Scenario::load() {
 

@@ -59,8 +59,6 @@ public:
 
     void                                              render( const QRect& viewport, GMlib::RenderTarget& target );
     void                                              prepare();
-    void                                              replotTesttorus();
-
 
     // **************************************************************
 
@@ -83,7 +81,8 @@ public:
     void                                              changeColor();
     void                                              insertObject(const QPoint& pos, char object);
     void                                              deleteObject();
-
+    void                                              replotLow();
+    void                                              replotHigh();
 
     void                                               save();
     void                                               load();

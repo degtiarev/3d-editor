@@ -92,8 +92,17 @@ void GuiApplication::handleGLInputEvents()
             _scenario.scaleObjects(delta);}
 
         // Keys
-        if (ke and ke->key()==Qt::Key_P){
-            _scenario.replotTesttorus();}
+        if(ke and ke->key() == Qt::Key_P)
+        {
+            qDebug() << "Handling the P button - replot low";
+            _scenario.replotLow();
+        }
+
+        if(ke and ke->key() == Qt::Key_O)
+        {
+            qDebug() << "Handling the O button - replot high";
+            _scenario.replotHigh();
+        }
 
         if(ke and ke->key()==Qt::Key_A){
             _scenario.toggleSelectAll();}
@@ -111,6 +120,8 @@ void GuiApplication::handleGLInputEvents()
             qDebug() << "Deleting selected objects";
             _scenario.deleteObject();
         }
+
+
 
 
         //Left button
