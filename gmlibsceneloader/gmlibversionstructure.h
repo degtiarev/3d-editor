@@ -4,12 +4,13 @@
 
 #include "../openddl/openddl.h"
 
-class GMlibVersionStructure : public ODDL::Structure {
+class GMlibVersionStructure : public ODDL::Structure
+{
 public:
-  GMlibVersionStructure();
-  ~GMlibVersionStructure() = default;
+    GMlibVersionStructure();
+    ~GMlibVersionStructure() = default;
 
-  bool ValidateSubstructure(const ODDL::DataDescription *dataDescription, const Structure *structure) const;
+    bool ValidateSubstructure(const ODDL::DataDescription *dataDescription, const Structure *structure) const override;
 };
 
 #endif // GMLIBVERSIONSTRUCTURE_H

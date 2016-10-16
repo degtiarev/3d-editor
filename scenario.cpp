@@ -882,18 +882,18 @@ void Scenario::load() {
     //SimStateLock a(*this);
     stopSimulation();
 
-
     auto filename = std::string("gmlib_save.openddl");
-
     auto is = std::ifstream(filename,std::ios_base::in);
-    if(!is.is_open()) {
+
+    if(!is.is_open())
+    {
         std::cerr << "Unable to open " << filename << " for reading..."
                   << std::endl;
         return;
     }
 
-    is.seekg( 0, std::ios_base::end );
-    auto buff_length = is.tellg();
+    is.seekg( 0, std::ios_base::end ); //Sets the position of the next character to be extracted from the input stream
+    auto buff_length = is.tellg(); //Get position in input sequence - buffer length
     is.seekg( 0, std::ios_base::beg );
 
     std::vector<char> buffer(buff_length);
@@ -905,38 +905,169 @@ void Scenario::load() {
     GMlibSceneLoaderDataDescription gsdd;
 
     ODDL::DataResult result = gsdd.ProcessText(buffer.data());
-    if(result != ODDL::kDataOkay) {
 
-        auto res_to_char = [](auto nr, const ODDL::DataResult& result) {
+    //for error
+    if(result != ODDL::kDataOkay)
+    {
+        auto res_to_char = [](auto nr, const ODDL::DataResult& result)
+        {
             return char(((0xff << (8*nr)) & result ) >> (8*nr));
         };
 
-        auto res_to_str = [&res_to_char](const ODDL::DataResult& result) {
+        auto res_to_str = [&res_to_char](const ODDL::DataResult& result)
+        {
             return std::string() + res_to_char(3,result) + res_to_char(2,result) + res_to_char(1,result) + res_to_char(0,result);
         };
 
-        std::cerr << "Data result no A-OK: " << res_to_str(result) << " (" << result << ")" << std::endl;
+        std::cerr << "!Data result not OK: " << res_to_str(result) << " (" << result << ")" << std::endl;
         return;
     }
 
+    std::cout << "Data result OK" << std::endl;
 
+    auto root = gsdd.GetRootStructure();
+    auto children = root->GetSubnodeCount();
+    auto node = root->GetFirstSubnode();
+    bool done = false;
 
-    std::cout << "Data result A-OK" << std::endl;
-    auto structure = gsdd.GetRootStructure()->GetFirstSubnode();
-    while(structure) {
+    while (!done)
+    {
+        std::shared_ptr<GMlib::SceneObject> objectToQueue = nullptr;
 
+        for( auto i = 0; i < children; i++)
+        {
+            if( node->GetStructureType() == int( GMStructTypes::PTorus))
+            {
+                std::shared_ptr<GMlib::PTorus<float>> torus = std::make_shared<GMlib::PTorus<float>>();
+                torus->toggleDefaultVisualizer();
+                torus->replot(200,200,1,1);
+                objectToQueue = torus;
+            }
+            else if( node->GetStructureType() == int( GMStructTypes::PSphere))
+            {
+                std::shared_ptr<GMlib::PSphere<float>> sphere = std::make_shared<GMlib::PSphere<float>>();
+                sphere->toggleDefaultVisualizer();
+                sphere->replot(50, 50, 10, 10);
+                objectToQueue = sphere;
+            }
+            else if( node->GetStructureType() == int( GMStructTypes::PCylinder))
+            {
+                std::shared_ptr<GMlib::PCylinder<float>> cylinder = std::make_shared<GMlib::PCylinder<float>>();
+                cylinder->toggleDefaultVisualizer();
+                cylinder->replot(50, 50, 10, 10);
+                objectToQueue = cylinder;
+            }
 
-        // Do something ^^,
-        // Travers the ODDL structures and build your scene objects
+            else if( node->GetStructureType() == int( GMStructTypes::GMlibVersion ) )
+            {
+                if( node->GetFirstSubnode() )
+                {
+                    auto child = node->GetFirstSubnode();
 
+                    if( child->GetStructureType() == int( ODDL::kDataInt32))
+                    {
 
-        structure = structure->Next();
+                        auto data = static_cast<ODDL::DataStructure<ODDL::Int32DataType>*>(child);
+                        std::cout << data << std::endl;
+
+                        if( data->GetDataElement(0) == GM_VERSION)
+                        {
+                            std::cout << "Valid GMlibVersion" << std::endl;
+                        }
+                        else std::cout << "Non-valid GMlibVersion" << std::endl;
+                    }
+                    else std::cout << "Non-valid GMlibVersion" << std::endl;
+                }
+            }
+        }
+
+        _sceneObjectQueue.push(objectToQueue);
+        if(!node)
+        {
+            if( node->Next() )
+            {
+                node = node->Next();
+            }
+        }
+        else done = true;
+    }
+    //end of load
+
+    //scene insert
+    while(!_sceneObjectQueue.empty())
+    {
+        auto obj = _sceneObjectQueue.front();
+        if(obj)
+        {
+            _scene->insert(obj.get());
+        }
+        _sceneObjectQueue.pop();
     }
 
-
-    //Load GMlib::SceneObjects into the scene.
-
+    startSimulation();
 }
+
+//void Scenario::load() {
+
+//    qDebug() << "Open scene...";
+//    //SimStateLock a(*this);
+//    stopSimulation();
+
+
+//    auto filename = std::string("gmlib_save.openddl");
+
+//    auto is = std::ifstream(filename,std::ios_base::in);
+//    if(!is.is_open()) {
+//        std::cerr << "Unable to open " << filename << " for reading..."
+//                  << std::endl;
+//        return;
+//    }
+
+//    is.seekg( 0, std::ios_base::end );
+//    auto buff_length = is.tellg();
+//    is.seekg( 0, std::ios_base::beg );
+
+//    std::vector<char> buffer(buff_length);
+//    is.read(buffer.data(),buff_length);
+
+
+//    std::cout << "Buffer length: " << buff_length << std::endl;
+
+//    GMlibSceneLoaderDataDescription gsdd;
+
+//    ODDL::DataResult result = gsdd.ProcessText(buffer.data());
+//    if(result != ODDL::kDataOkay) {
+
+//        auto res_to_char = [](auto nr, const ODDL::DataResult& result) {
+//            return char(((0xff << (8*nr)) & result ) >> (8*nr));
+//        };
+
+//        auto res_to_str = [&res_to_char](const ODDL::DataResult& result) {
+//            return std::string() + res_to_char(3,result) + res_to_char(2,result) + res_to_char(1,result) + res_to_char(0,result);
+//        };
+
+//        std::cerr << "Data result no A-OK: " << res_to_str(result) << " (" << result << ")" << std::endl;
+//        return;
+//    }
+
+
+
+//    std::cout << "Data result A-OK" << std::endl;
+//    auto structure = gsdd.GetRootStructure()->GetFirstSubnode();
+//    while(structure) {
+
+
+//        // Do something ^^,
+//        // Travers the ODDL structures and build your scene objects
+
+
+//        structure = structure->Next();
+//    }
+
+
+//    //Load GMlib::SceneObjects into the scene.
+
+//}
 
 // **************************************************************
 

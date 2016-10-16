@@ -41,6 +41,8 @@ class Angle;
 // stl
 #include <iostream>
 #include <memory>
+#include <queue>
+
 
 class Scenario: public QObject {
     Q_OBJECT
@@ -113,7 +115,7 @@ private:
 
 
     // **************************************************************
-
+    std::queue<std::shared_ptr<GMlib::SceneObject>>   _sceneObjectQueue;
     void                                              save( std::ofstream& os, const GMlib::SceneObject* obj);
     void                                              saveSO( std::ofstream& os, const GMlib::SceneObject* obj);
     void                                              savePT( std::ofstream& os, const GMlib::PTorus<float>* obj);
